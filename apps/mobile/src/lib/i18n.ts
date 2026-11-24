@@ -1,0 +1,131 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+/** Every visible text in the app, in English and Urdu. Keep both in step. */
+const en = {
+  appName: 'Dairy Farm',
+  language: 'Language', english: 'English', urdu: 'اردو',
+  ok: 'OK', cancel: 'Cancel', save: 'Save', saving: 'Saving…', edit: 'Edit', delete: 'Delete', back: 'Back', yes: 'Yes', no: 'No',
+  retry: 'Try again', discard: 'Discard', close: 'Close', today: 'Today', yesterday: 'Yesterday', optional: 'optional', none: 'None',
+  required: 'This is required', onlineOnly: 'This needs internet. Please connect and try again.',
+  // auth
+  login: 'Log in', logout: 'Log out', username: 'Username', password: 'Password', name: 'Name',
+  serverAddress: 'Server address', serverSettings: 'Server settings', checkServer: 'Check connection',
+  serverOk: 'Server is reachable', serverFail: 'Cannot reach the server',
+  firstSetup: 'First-time setup', setupCode: 'Setup code', createOwner: 'Create owner account',
+  setupHelp: 'Only needed once. The setup code is in the server settings (.env file).',
+  loginFailed: 'Login failed', needsInternetFirstLogin: 'The first login needs internet.',
+  logoutUnsynced: '{{count}} change(s) are not synced yet. They stay on this phone and will be sent the next time you log in. Log out?',
+  otherUserPending: 'Changes from another account are waiting on this phone. That person must log in and sync first.',
+  changePassword: 'Change password', currentPassword: 'Current password', newPassword: 'New password', passwordChanged: 'Password changed',
+  sessionExpired: 'Your login has expired. Please log in again. Your unsynced changes are kept.',
+  // sync
+  sync: 'Sync', syncNow: 'Sync now', syncing: 'Syncing…', online: 'Online', offline: 'Offline – entries are saved on this phone',
+  allSynced: 'All changes synced', waiting: '{{count}} change(s) waiting to sync', lastSync: 'Last sync: {{time}}', neverSynced: 'Not synced yet',
+  conflictsCount: '{{count}} conflict(s) need a decision', rejectedCount: '{{count}} change(s) not accepted', syncError: 'Sync problem: {{msg}}',
+  uploadsWaiting: '{{count}} photo(s) waiting to upload',
+  syncDetails: 'Sync details', waitingChanges: 'Waiting to send', notAccepted: 'Not accepted by server', conflicts: 'Conflicts',
+  stateSynced: 'Synced', statePending: 'Not synced yet', stateConflict: 'Conflict', stateRejected: 'Not accepted',
+  opCreate: 'Add', opUpdate: 'Edit', opDelete: 'Delete', opResolve: 'Conflict decision',
+  waitingForConflict: 'Waits for a conflict to be resolved',
+  // conflicts
+  conflict: 'Conflict', conflictExplainEdit: 'Someone else changed the same information before your change reached the server. Nothing was overwritten. Choose what to keep.',
+  conflictExplainDuplicate: 'A record with the same details already exists. Your entry was not saved twice.',
+  conflictExplainEditDeleted: 'You edited a record that someone else deleted.',
+  conflictExplainDeleteEdited: 'You deleted a record that someone else changed after you last saw it.',
+  field: 'Field', theirs: 'Saved on server', mine: 'Your change', keepTheirs: 'Keep the saved version', useMine: 'Use my change',
+  saveAsNew: 'Save mine with a different tag', restoreWithMine: 'Restore it with my change', deleteAnyway: 'Delete anyway', keepRecord: 'Keep the record',
+  changedBy: 'Changed by {{name}}', resolved: 'Resolved', newTag: 'New tag',
+  // record meta
+  addedBy: 'Added by {{name}} · {{time}}', updatedBy: 'Last updated by {{name}} · {{time}}', unknownUser: 'Unknown user',
+  history: 'Change history', historyOffline: 'History is shown when online.', created: 'Created', updated: 'Updated', deleted: 'Deleted', conflictResolved: 'Conflict resolved',
+  emptyValue: '(empty)',
+  // home
+  home: 'Home', hello: 'Assalam-o-Alaikum, {{name}}', herd: 'Herd', animals: 'Animals', settings: 'Settings',
+  comingSoon: 'Coming in the next phases: milk, feed, sales, expenses, health and reports.',
+  // animals
+  addAnimal: 'Add animal', editAnimal: 'Edit animal', animal: 'Animal', tag: 'Tag number', breed: 'Breed', sex: 'Sex', female: 'Female', male: 'Male',
+  birthDate: 'Birth date', birthDateEstimated: 'Birth date is an estimate', age: 'Age', purchaseDate: 'Purchase date', purchasePrice: 'Purchase price (PKR)',
+  notes: 'Notes', photo: 'Photo', takePhoto: 'Take photo', choosePhoto: 'Choose photo', removePhoto: 'Remove photo',
+  status: 'Status', statusDate: 'Since', startingStatus: 'Current status', startingStatusDate: 'Status since',
+  changeStatus: 'Change status', newStatus: 'New status', effectiveDate: 'Date', reason: 'Reason', statusHistory: 'Status history',
+  noAnimals: 'No animals yet. Add your first animal.', all: 'All', active: 'On farm',
+  s_MILKING: 'Milking', s_DRY: 'Dry', s_YOUNG: 'Calf / young', s_SOLD: 'Sold', s_DECEASED: 'Died',
+  tagRequired: 'Tag number is required', tagTaken: 'Another animal already has this tag', deleteAnimalQ: 'Delete this animal? It can still be seen in history.',
+  ageYearsMonths: '{{y}} y {{m}} m', ageMonths: '{{m}} months', estimated: 'estimate', details: 'Details', mother: 'Mother',
+  noPermission: 'You do not have permission for this.',
+  // users
+  users: 'Users', addUser: 'Add user', editUser: 'Edit user', role: 'Role', owner: 'Owner', worker: 'Worker', activeAccount: 'Account active',
+  permissions: 'Permissions', resetPassword: 'Set new password', userSaved: 'Saved', disabled: 'Disabled',
+  pView: 'See', pAdd: 'Add', pEdit: 'Edit', pDelete: 'Delete',
+  m_animals: 'Animals', m_milk: 'Milk', m_sales: 'Sales & customers', m_feed: 'Feed & suppliers', m_expenses: 'Expenses', m_health: 'Health & breeding', m_reports: 'Reports', m_finance: 'Cash & capital',
+  ownerHasAll: 'Owners can do everything.',
+  about: 'About', version: 'Version',
+};
+
+type Dict = typeof en;
+
+const ur: Dict = {
+  appName: 'ڈیری فارم',
+  language: 'زبان', english: 'English', urdu: 'اردو',
+  ok: 'ٹھیک ہے', cancel: 'منسوخ', save: 'محفوظ کریں', saving: 'محفوظ ہو رہا ہے…', edit: 'تبدیل کریں', delete: 'حذف کریں', back: 'واپس', yes: 'ہاں', no: 'نہیں',
+  retry: 'دوبارہ کوشش کریں', discard: 'ختم کریں', close: 'بند کریں', today: 'آج', yesterday: 'کل', optional: 'اختیاری', none: 'کوئی نہیں',
+  required: 'یہ لازمی ہے', onlineOnly: 'اس کے لیے انٹرنیٹ ضروری ہے۔ انٹرنیٹ چلا کر دوبارہ کوشش کریں۔',
+  login: 'لاگ اِن', logout: 'لاگ آؤٹ', username: 'یوزر نیم', password: 'پاس ورڈ', name: 'نام',
+  serverAddress: 'سرور کا پتہ', serverSettings: 'سرور کی ترتیبات', checkServer: 'رابطہ چیک کریں',
+  serverOk: 'سرور سے رابطہ ہو گیا', serverFail: 'سرور سے رابطہ نہیں ہو سکا',
+  firstSetup: 'پہلی بار سیٹ اپ', setupCode: 'سیٹ اپ کوڈ', createOwner: 'مالک کا اکاؤنٹ بنائیں',
+  setupHelp: 'صرف ایک بار ضروری ہے۔ سیٹ اپ کوڈ سرور کی ترتیبات (.env فائل) میں ہے۔',
+  loginFailed: 'لاگ اِن نہیں ہو سکا', needsInternetFirstLogin: 'پہلی بار لاگ اِن کے لیے انٹرنیٹ ضروری ہے۔',
+  logoutUnsynced: '{{count}} تبدیلیاں ابھی سنک نہیں ہوئیں۔ یہ اسی فون میں محفوظ رہیں گی اور اگلی بار لاگ اِن پر بھیج دی جائیں گی۔ لاگ آؤٹ کریں؟',
+  otherUserPending: 'اس فون پر کسی اور اکاؤنٹ کی تبدیلیاں باقی ہیں۔ پہلے وہ شخص لاگ اِن کر کے سنک کرے۔',
+  changePassword: 'پاس ورڈ تبدیل کریں', currentPassword: 'موجودہ پاس ورڈ', newPassword: 'نیا پاس ورڈ', passwordChanged: 'پاس ورڈ تبدیل ہو گیا',
+  sessionExpired: 'آپ کا لاگ اِن ختم ہو گیا ہے۔ دوبارہ لاگ اِن کریں۔ آپ کی تبدیلیاں محفوظ ہیں۔',
+  sync: 'سنک', syncNow: 'ابھی سنک کریں', syncing: 'سنک ہو رہا ہے…', online: 'آن لائن', offline: 'آف لائن – اندراج اسی فون میں محفوظ ہو رہے ہیں',
+  allSynced: 'تمام تبدیلیاں سنک ہو گئیں', waiting: '{{count}} تبدیلیاں سنک ہونے کی منتظر', lastSync: 'آخری سنک: {{time}}', neverSynced: 'ابھی سنک نہیں ہوا',
+  conflictsCount: '{{count}} ٹکراؤ پر فیصلہ درکار ہے', rejectedCount: '{{count}} تبدیلیاں قبول نہیں ہوئیں', syncError: 'سنک میں مسئلہ: {{msg}}',
+  uploadsWaiting: '{{count}} تصاویر اپ لوڈ ہونے کی منتظر',
+  syncDetails: 'سنک کی تفصیل', waitingChanges: 'بھیجی جانی ہیں', notAccepted: 'سرور نے قبول نہیں کیں', conflicts: 'ٹکراؤ',
+  stateSynced: 'سنک شدہ', statePending: 'ابھی سنک نہیں ہوا', stateConflict: 'ٹکراؤ', stateRejected: 'قبول نہیں ہوا',
+  opCreate: 'اندراج', opUpdate: 'تبدیلی', opDelete: 'حذف', opResolve: 'ٹکراؤ کا فیصلہ',
+  waitingForConflict: 'ٹکراؤ حل ہونے کا انتظار',
+  conflict: 'ٹکراؤ', conflictExplainEdit: 'آپ کی تبدیلی سرور تک پہنچنے سے پہلے کسی اور نے یہی معلومات تبدیل کر دیں۔ کچھ بھی مٹایا نہیں گیا۔ فیصلہ کریں کہ کیا رکھنا ہے۔',
+  conflictExplainDuplicate: 'یہی تفصیل والا ریکارڈ پہلے سے موجود ہے۔ آپ کا اندراج دو بار محفوظ نہیں ہوا۔',
+  conflictExplainEditDeleted: 'آپ نے وہ ریکارڈ تبدیل کیا جسے کسی اور نے حذف کر دیا تھا۔',
+  conflictExplainDeleteEdited: 'آپ نے وہ ریکارڈ حذف کیا جسے کسی اور نے بعد میں تبدیل کیا تھا۔',
+  field: 'خانہ', theirs: 'سرور پر محفوظ', mine: 'آپ کی تبدیلی', keepTheirs: 'محفوظ شدہ رکھیں', useMine: 'میری تبدیلی رکھیں',
+  saveAsNew: 'میرا اندراج نئے ٹیگ کے ساتھ محفوظ کریں', restoreWithMine: 'میری تبدیلی کے ساتھ واپس لائیں', deleteAnyway: 'پھر بھی حذف کریں', keepRecord: 'ریکارڈ رکھیں',
+  changedBy: '{{name}} نے تبدیل کیا', resolved: 'حل ہو گیا', newTag: 'نیا ٹیگ',
+  addedBy: '{{name}} نے شامل کیا · {{time}}', updatedBy: 'آخری تبدیلی {{name}} · {{time}}', unknownUser: 'نامعلوم صارف',
+  history: 'تبدیلیوں کی تاریخ', historyOffline: 'تاریخ انٹرنیٹ پر دکھائی جاتی ہے۔', created: 'شامل کیا', updated: 'تبدیل کیا', deleted: 'حذف کیا', conflictResolved: 'ٹکراؤ حل کیا',
+  emptyValue: '(خالی)',
+  home: 'ہوم', hello: 'السلام علیکم، {{name}}', herd: 'ریوڑ', animals: 'جانور', settings: 'ترتیبات',
+  comingSoon: 'اگلے مراحل میں: دودھ، چارہ، فروخت، اخراجات، صحت اور رپورٹس۔',
+  addAnimal: 'جانور شامل کریں', editAnimal: 'جانور کی تفصیل تبدیل کریں', animal: 'جانور', tag: 'ٹیگ نمبر', breed: 'نسل', sex: 'جنس', female: 'مادہ', male: 'نر',
+  birthDate: 'تاریخ پیدائش', birthDateEstimated: 'تاریخ پیدائش اندازاً ہے', age: 'عمر', purchaseDate: 'خریداری کی تاریخ', purchasePrice: 'قیمت خرید (روپے)',
+  notes: 'نوٹ', photo: 'تصویر', takePhoto: 'تصویر کھینچیں', choosePhoto: 'تصویر منتخب کریں', removePhoto: 'تصویر ہٹائیں',
+  status: 'حالت', statusDate: 'کب سے', startingStatus: 'موجودہ حالت', startingStatusDate: 'حالت کب سے',
+  changeStatus: 'حالت تبدیل کریں', newStatus: 'نئی حالت', effectiveDate: 'تاریخ', reason: 'وجہ', statusHistory: 'حالت کی تاریخ',
+  noAnimals: 'ابھی کوئی جانور نہیں۔ پہلا جانور شامل کریں۔', all: 'سب', active: 'فارم پر',
+  s_MILKING: 'دودھ دے رہی', s_DRY: 'خشک', s_YOUNG: 'بچہ / جوان', s_SOLD: 'فروخت شدہ', s_DECEASED: 'مر گیا',
+  tagRequired: 'ٹیگ نمبر لازمی ہے', tagTaken: 'یہ ٹیگ کسی اور جانور کا ہے', deleteAnimalQ: 'یہ جانور حذف کریں؟ تاریخ میں پھر بھی نظر آئے گا۔',
+  ageYearsMonths: '{{y}} سال {{m}} ماہ', ageMonths: '{{m}} ماہ', estimated: 'اندازاً', details: 'تفصیل', mother: 'ماں',
+  noPermission: 'آپ کو اس کی اجازت نہیں ہے۔',
+  users: 'صارفین', addUser: 'صارف شامل کریں', editUser: 'صارف تبدیل کریں', role: 'کردار', owner: 'مالک', worker: 'ملازم', activeAccount: 'اکاؤنٹ فعال',
+  permissions: 'اجازتیں', resetPassword: 'نیا پاس ورڈ لگائیں', userSaved: 'محفوظ ہو گیا', disabled: 'غیر فعال',
+  pView: 'دیکھے', pAdd: 'شامل', pEdit: 'تبدیل', pDelete: 'حذف',
+  m_animals: 'جانور', m_milk: 'دودھ', m_sales: 'فروخت اور گاہک', m_feed: 'چارہ اور سپلائر', m_expenses: 'اخراجات', m_health: 'صحت اور افزائش', m_reports: 'رپورٹس', m_finance: 'نقدی اور سرمایہ',
+  ownerHasAll: 'مالک سب کچھ کر سکتا ہے۔',
+  about: 'معلومات', version: 'ورژن',
+};
+
+export type TKey = keyof Dict;
+
+i18n.use(initReactI18next).init({
+  resources: { en: { translation: en }, ur: { translation: ur } },
+  lng: 'ur',
+  fallbackLng: 'en',
+  interpolation: { escapeValue: false },
+});
+
+export default i18n;

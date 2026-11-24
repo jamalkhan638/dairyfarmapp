@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Dairy Farm",
+    "slug": "dairyfarm",
+    "scheme": "dairyfarm",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.dairyfarm.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E8F3EA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-image",
+      ["expo-localization", { "supportsRTL": true }],
+      "@react-native-community/datetimepicker",
+      ["expo-image-picker", { "photosPermission": "Allow Dairy Farm to use your photos for animal pictures and receipts.", "cameraPermission": "Allow Dairy Farm to use the camera for animal pictures and receipts." }]
+    ],
+    "extra": {
+      "supportsRTL": true,
+      "apiUrl": "http://192.168.1.10:3000/api"
+    }
+  }
+}
