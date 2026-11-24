@@ -1,0 +1,13 @@
+# Dairy Farm site for the shared Caddy server.
+# Install as /etc/caddy/sites/dairy.caddy (loaded by SupplyMeadow's Caddyfile via
+# "import /etc/caddy/sites/*.caddy"), then: systemctl reload caddy
+# Caddy gets and renews the HTTPS certificate for this name by itself.
+# Only this exact name: never add a wildcard or catch-all here (SupplyMeadow owns those).
+dairy.supplymeadow.site {
+	# Photos and receipts are up to 10 MB.
+	request_body {
+		max_size 12MB
+	}
+	# The dairy API (deploy/.env API_PORT). SupplyMeadow uses 3000, so this must differ.
+	reverse_proxy 127.0.0.1:3100
+}

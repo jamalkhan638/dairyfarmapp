@@ -1,7 +1,7 @@
 # Put the Dairy Farm server on Contabo
 
 The dairy app runs in its own Docker containers: its own database, photo storage and daily backups.
-It shares nothing with supplymeadow except the server itself and nginx.
+It shares nothing with SupplyMeadow except the server itself and Caddy (the HTTPS web server).
 
 ## 1. Subdomain (once)
 
@@ -38,16 +38,23 @@ curl http://127.0.0.1:3100/api/health
 ```
 The second command should answer `{"ok":true,...}`.
 
-## 5. HTTPS through nginx
+## 5. HTTPS through Caddy (shared with SupplyMeadow)
 
-If supplymeadow already uses nginx with certbot:
+Caddy already owns ports 80/443 and handles certificates. Do **not** install nginx or Traefik.
+SupplyMeadow's `update.sh` overwrites `/etc/caddy/Caddyfile`, so the dairy site lives in its own file,
+which SupplyMeadow's Caddyfile loads with `import /etc/caddy/sites/*.caddy`.
+That line must be in SupplyMeadow's repository (`deploy/Caddyfile`); it is added on the SupplyMeadow side.
+
 ```bash
-cp deploy/nginx-dairy.conf /etc/nginx/sites-available/dairy
-ln -s /etc/nginx/sites-available/dairy /etc/nginx/sites-enabled/dairy
-nginx -t && systemctl reload nginx
-certbot --nginx -d dairy.supplymeadow.site
+mkdir -p /etc/caddy/sites
+cp /opt/dairyfarmapp/deploy/dairy.caddy /etc/caddy/sites/dairy.caddy
+caddy validate --config /etc/caddy/Caddyfile
+systemctl reload caddy
 ```
 Then from any computer, `https://dairy.supplymeadow.site/api/health` should answer `{"ok":true,...}`.
+The first request can take a few seconds while Caddy gets the certificate.
+
+If `API_PORT` in `deploy/.env` is not 3100, change the port in `/etc/caddy/sites/dairy.caddy` to match.
 
 ## 6. Create the owner account
 

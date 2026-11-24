@@ -34,7 +34,7 @@ services:
       LOCAL_STORAGE_DIR: /data/files
     volumes:
       - files:/data/files
-    # Only reachable from this server; the web server (nginx) forwards HTTPS traffic to it.
+    # Only reachable from this server; Caddy forwards HTTPS traffic to it.
     ports:
       - "127.0.0.1:${API_PORT:-3100}:3000"
 
