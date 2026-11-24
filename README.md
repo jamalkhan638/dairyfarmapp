@@ -22,9 +22,19 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - Conflicts: edits to different fields merge; same field → user decides, nothing overwritten
 - Urdu (right-to-left) and English, switchable in the app
 
+**Phase 2 – Milk: done**
+- Record a milking (morning or evening) for all cows on one screen, any date (not future)
+- One entry per cow, date and milking: a second one on another phone becomes a duplicate to decide on
+- Empty means "not recorded" and is shown as missing; 0 means the cow gave no milk
+- Daily view: morning/evening/total, "X of Y milkings recorded", which cows are missing
+- Milk not sold: fed to calves, used at home, discarded; remaining milk with a warning if negative
+- Monthly view: totals, coverage, "Month in progress" / "Incomplete" labels, average per recorded milking
+- Each cow has a Milk tab (last 30 days, who entered each value)
+- Workers with only milk access can still see the cow list (not edit it)
+
 Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
 
-Next phases: Milk → Customers & sales → Feed & suppliers → Expenses & capital → Health & breeding → Reports → Release & backups.
+Next phases: Customers & sales → Feed & suppliers → Expenses & capital → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
 
@@ -62,7 +72,7 @@ Automated (needs a `dairy_test` database: `createdb dairy_test`):
 ```bash
 npm test
 ```
-26 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
+39 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
 
 By hand on a phone:
 1. **Owner + worker.** As owner: Settings → Users → Add user. Give the worker Animals: See + Add + Edit, but not Delete. Log in as the worker on a second phone.
@@ -74,6 +84,16 @@ By hand on a phone:
 7. **Permission enforced by server.** As the worker, delete is not offered. The server also refuses it if forced (covered by the tests).
 8. **Status.** Change status → Dry. It shows at once, offline too, and appears in Status history.
 9. **Language.** Settings → Language → English / اردو. The app restarts once to switch direction.
+
+## Verify Phase 2 (Milk)
+
+1. Home → **Morning**. Every milking cow is listed. Enter litres for some cows and leave one empty, then Save.
+2. Home shows today's total and "1 of 2 milkings recorded"-style coverage. **Milk** shows the missing cow under "Not recorded yet".
+3. Open **Morning** again: the saved values are filled in. Change one and Save. The cow's **Milk** tab shows the new value, and its history shows who changed it.
+4. Offline duplicate: put two phones in airplane mode and record the same cow's morning milk on both, then reconnect. One phone shows a conflict, which offers keeping the saved value or using yours.
+5. **Add milk use** (e.g. 3 L fed to calves). The day's "Remaining" goes down.
+6. **Monthly milk**: last month shows "Incomplete" if milkings are missing. This month shows "Month in progress".
+7. Make a worker with only Milk permissions. They can record milk and see the cows, but cannot edit an animal.
 
 ## How sync works (short)
 

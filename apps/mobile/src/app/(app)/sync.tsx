@@ -8,6 +8,7 @@ import { local } from '../../lib/db';
 import { useSession } from '../../lib/session';
 import { formatDateTime } from '../../lib/format';
 import { entityLabel, recordTitle } from '../../domain/entity-labels';
+import { useAnimalTags } from '../../lib/use-animal-tags';
 import { Badge, Body, Button, Card, InfoLine, Muted, Row, Screen, Section } from '../../components/ui';
 
 export default function SyncDetails() {
@@ -15,6 +16,7 @@ export default function SyncDetails() {
   const router = useRouter();
   const { me } = useSession();
   const { status, online, syncNow } = useSync();
+  const tagOf = useAnimalTags();
   const { data } = useLocalQuery(async () => {
     const { repo } = local();
     const outbox = await repo.outbox();
@@ -22,9 +24,9 @@ export default function SyncDetails() {
     const titles = new Map<string, string>();
     for (const r of outbox) {
       const rec = await repo.get(r.entity, r.record_id);
-      titles.set(`${r.entity}:${r.record_id}`, recordTitle(r.entity, rec?.data));
+      titles.set(`${r.entity}:${r.record_id}`, recordTitle(r.entity, rec?.data, tagOf));
     }
-    for (const c of conflicts) titles.set(`c:${c.id}`, recordTitle(c.data.entity, c.data.theirs ?? c.data.mine?.data));
+    for (const c of conflicts) titles.set(`c:${c.id}`, recordTitle(c.data.entity, c.data.theirs ?? c.data.mine?.data, tagOf));
     return { outbox, conflicts, titles };
   });
 

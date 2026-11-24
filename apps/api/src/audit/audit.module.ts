@@ -2,7 +2,7 @@ import { Controller, ForbiddenException, Get, Global, Module, NotFoundException,
 import { can } from '@dairy/shared';
 import { CurrentUser, type AuthUser } from '../common/auth-user';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
-import { EntityRegistry } from '../sync/entity-registry';
+import { canView, EntityRegistry } from '../sync/entity-registry';
 import { AuditService } from './audit.service';
 
 @Controller('history')
@@ -19,7 +19,7 @@ class HistoryController {
       if (!def) throw new NotFoundException();
       const record = await def.delegate(this.prisma as unknown as Tx).findUnique({ where: { id } });
       if (!record) throw new NotFoundException();
-      if (!can(user.role, user.permissions, def.moduleFor(record), 'view')) throw new ForbiddenException();
+      if (!canView(def, record, (m) => can(user.role, user.permissions, m, 'view'))) throw new ForbiddenException();
     }
     return this.audit.history(entity, id);
   }

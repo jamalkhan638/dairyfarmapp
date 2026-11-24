@@ -42,7 +42,7 @@ const en = {
   emptyValue: '(empty)',
   // home
   home: 'Home', hello: 'Assalam-o-Alaikum, {{name}}', herd: 'Herd', animals: 'Animals', settings: 'Settings',
-  comingSoon: 'Coming in the next phases: milk, feed, sales, expenses, health and reports.',
+  comingSoon: 'Coming in the next phases: sales, feed, expenses, health and reports.',
   // animals
   addAnimal: 'Add animal', editAnimal: 'Edit animal', animal: 'Animal', tag: 'Tag number', breed: 'Breed', sex: 'Sex', female: 'Female', male: 'Male',
   birthDate: 'Birth date', birthDateEstimated: 'Birth date is an estimate', age: 'Age', purchaseDate: 'Purchase date', purchasePrice: 'Purchase price (PKR)',
@@ -61,6 +61,22 @@ const en = {
   m_animals: 'Animals', m_milk: 'Milk', m_sales: 'Sales & customers', m_feed: 'Feed & suppliers', m_expenses: 'Expenses', m_health: 'Health & breeding', m_reports: 'Reports', m_finance: 'Cash & capital',
   ownerHasAll: 'Owners can do everything.',
   about: 'About', version: 'Version',
+  // milk
+  milk: 'Milk', morning: 'Morning', evening: 'Evening', session: 'Milking', date: 'Date', type: 'Type', total: 'Total',
+  recordMilk: 'Record milk', litres: 'litres', L: 'L', produced: 'Produced', todayMilk: "Today's milk",
+  recordedOf: '{{recorded}} of {{expected}} milkings recorded', missingEntries: 'Not recorded yet',
+  missingNote: 'Milkings not recorded are shown as missing, never counted as zero.',
+  usage: 'Milk not sold', addUsage: 'Add milk use', u_CALF_FED: 'Fed to calves', u_HOME: 'Used at home', u_DISCARDED: 'Discarded',
+  sold: 'Sold', soldComing: 'Sold milk will come from customer deliveries (next phase).',
+  remaining: 'Remaining', remainingNegative: 'More milk is used than produced. Please check the entries.',
+  monthly: 'Monthly milk', incomplete: 'Incomplete', inProgress: 'Month in progress', complete: 'Complete', dayInProgress: 'Day in progress',
+  noMilkingCows: 'No milking cows on this date.', showOtherAnimals: 'Show other female animals',
+  invalidLitres: 'Enter litres like 12.5', cannotDeleteEntries: 'You cannot remove saved entries. Ask the owner.',
+  savedCounts: 'Saved: {{added}} added, {{updated}} changed, {{deleted}} removed', nothingChanged: 'Nothing changed',
+  emptyMeansNotRecorded: 'Leave empty if not milked or not known. Enter 0 only if the cow gave no milk.',
+  last30: 'Last 30 days', quantity: 'Quantity (litres)', whichAnimal: 'Animal (optional)', deleteEntryQ: 'Delete this entry?',
+  averagePerMilking: 'Average per recorded milking', notMilkingNow: 'not milking on this date', estimateLabel: 'Estimate',
+  prevMonth: '‹ Previous', nextMonth: 'Next ›', entries: 'Entries', noEntries: 'No entries.',
 };
 
 type Dict = typeof en;
@@ -100,7 +116,7 @@ const ur: Dict = {
   history: 'تبدیلیوں کی تاریخ', historyOffline: 'تاریخ انٹرنیٹ پر دکھائی جاتی ہے۔', created: 'شامل کیا', updated: 'تبدیل کیا', deleted: 'حذف کیا', conflictResolved: 'ٹکراؤ حل کیا',
   emptyValue: '(خالی)',
   home: 'ہوم', hello: 'السلام علیکم، {{name}}', herd: 'ریوڑ', animals: 'جانور', settings: 'ترتیبات',
-  comingSoon: 'اگلے مراحل میں: دودھ، چارہ، فروخت، اخراجات، صحت اور رپورٹس۔',
+  comingSoon: 'اگلے مراحل میں: فروخت، چارہ، اخراجات، صحت اور رپورٹس۔',
   addAnimal: 'جانور شامل کریں', editAnimal: 'جانور کی تفصیل تبدیل کریں', animal: 'جانور', tag: 'ٹیگ نمبر', breed: 'نسل', sex: 'جنس', female: 'مادہ', male: 'نر',
   birthDate: 'تاریخ پیدائش', birthDateEstimated: 'تاریخ پیدائش اندازاً ہے', age: 'عمر', purchaseDate: 'خریداری کی تاریخ', purchasePrice: 'قیمت خرید (روپے)',
   notes: 'نوٹ', photo: 'تصویر', takePhoto: 'تصویر کھینچیں', choosePhoto: 'تصویر منتخب کریں', removePhoto: 'تصویر ہٹائیں',
@@ -117,6 +133,21 @@ const ur: Dict = {
   m_animals: 'جانور', m_milk: 'دودھ', m_sales: 'فروخت اور گاہک', m_feed: 'چارہ اور سپلائر', m_expenses: 'اخراجات', m_health: 'صحت اور افزائش', m_reports: 'رپورٹس', m_finance: 'نقدی اور سرمایہ',
   ownerHasAll: 'مالک سب کچھ کر سکتا ہے۔',
   about: 'معلومات', version: 'ورژن',
+  milk: 'دودھ', morning: 'صبح', evening: 'شام', session: 'دودھ کا وقت', date: 'تاریخ', type: 'قسم', total: 'کل',
+  recordMilk: 'دودھ درج کریں', litres: 'لیٹر', L: 'لیٹر', produced: 'پیداوار', todayMilk: 'آج کا دودھ',
+  recordedOf: '{{expected}} میں سے {{recorded}} دودھ درج ہوئے', missingEntries: 'ابھی درج نہیں ہوا',
+  missingNote: 'جو دودھ درج نہیں ہوئے وہ غائب دکھائے جاتے ہیں، انہیں کبھی صفر نہیں گنا جاتا۔',
+  usage: 'جو دودھ بیچا نہیں گیا', addUsage: 'دودھ کا استعمال درج کریں', u_CALF_FED: 'بچھڑوں کو پلایا', u_HOME: 'گھر میں استعمال', u_DISCARDED: 'ضائع کیا',
+  sold: 'فروخت', soldComing: 'فروخت شدہ دودھ اگلے مرحلے میں گاہکوں کی ترسیل سے آئے گا۔',
+  remaining: 'باقی', remainingNegative: 'پیداوار سے زیادہ دودھ استعمال درج ہے۔ اندراج چیک کریں۔',
+  monthly: 'ماہانہ دودھ', incomplete: 'نامکمل', inProgress: 'مہینہ جاری ہے', complete: 'مکمل', dayInProgress: 'دن جاری ہے',
+  noMilkingCows: 'اس تاریخ کو کوئی دودھ دینے والی گائے نہیں۔', showOtherAnimals: 'دیگر مادہ جانور دکھائیں',
+  invalidLitres: 'لیٹر اس طرح لکھیں: 12.5', cannotDeleteEntries: 'آپ محفوظ اندراج نہیں ہٹا سکتے۔ مالک سے کہیں۔',
+  savedCounts: 'محفوظ: {{added}} شامل، {{updated}} تبدیل، {{deleted}} حذف', nothingChanged: 'کچھ تبدیل نہیں ہوا',
+  emptyMeansNotRecorded: 'اگر دودھ نہیں نکالا یا معلوم نہیں تو خالی چھوڑیں۔ صفر صرف تب لکھیں جب گائے نے دودھ نہ دیا ہو۔',
+  last30: 'پچھلے 30 دن', quantity: 'مقدار (لیٹر)', whichAnimal: 'جانور (اختیاری)', deleteEntryQ: 'یہ اندراج حذف کریں؟',
+  averagePerMilking: 'فی درج دودھ اوسط', notMilkingNow: 'اس تاریخ کو دودھ نہیں دے رہی', estimateLabel: 'اندازہ',
+  prevMonth: '‹ پچھلا', nextMonth: 'اگلا ›', entries: 'اندراج', noEntries: 'کوئی اندراج نہیں۔',
 };
 
 export type TKey = keyof Dict;

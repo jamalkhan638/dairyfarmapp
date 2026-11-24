@@ -26,6 +26,10 @@ export default function AppLayout() {
         <Stack.Screen name="animals/[id]/index" options={{ title: t('animal') }} />
         <Stack.Screen name="animals/[id]/edit" options={{ title: t('editAnimal') }} />
         <Stack.Screen name="animals/[id]/status" options={{ title: t('changeStatus') }} />
+        <Stack.Screen name="milk/index" options={{ title: t('milk') }} />
+        <Stack.Screen name="milk/entry" options={{ title: t('recordMilk') }} />
+        <Stack.Screen name="milk/usage" options={{ title: t('addUsage') }} />
+        <Stack.Screen name="milk/month" options={{ title: t('monthly') }} />
         <Stack.Screen name="sync" options={{ title: t('syncDetails') }} />
         <Stack.Screen name="conflict/[id]" options={{ title: t('conflict') }} />
         <Stack.Screen name="history/[entity]/[id]" options={{ title: t('history') }} />

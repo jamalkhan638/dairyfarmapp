@@ -7,16 +7,17 @@ import { attachmentCreate, attachmentUpdate, can } from '@dairy/shared';
 import { CurrentUser, type AuthUser } from '../common/auth-user';
 import { RejectError } from '../common/errors';
 import { PrismaService } from '../prisma/prisma.service';
-import { EntityRegistry, type Row } from '../sync/entity-registry';
+import { canView, EntityRegistry, type Row } from '../sync/entity-registry';
 import { StorageService } from './storage.service';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
-function parentModule(record: Row) {
+function parentDef(record: Row) {
   const parent = EntityRegistry.get(record.entity);
   if (!parent || parent.name === 'Attachment') throw new RejectError('invalid', `Cannot attach files to ${record.entity}`);
-  return parent.moduleFor({});
+  return parent;
 }
+const parentModule = (record: Row) => parentDef(record).moduleFor({});
 
 /**
  * A photo is saved in two steps so it works offline:
@@ -50,7 +51,7 @@ class FilesController {
   async download(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Res() res: Response) {
     const a = await this.prisma.attachment.findUnique({ where: { id } });
     if (!a || !a.uploadedAt) throw new NotFoundException('File not uploaded yet');
-    if (!can(user.role, user.permissions, parentModule(a), 'view')) throw new ForbiddenException();
+    if (!canView(parentDef(a), {}, (m) => can(user.role, user.permissions, m, 'view'))) throw new ForbiddenException();
     const data = await this.storage.get(a.storageKey);
     res.setHeader('Content-Type', a.contentType);
     res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
@@ -80,6 +81,7 @@ export class FilesModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'Attachment',
       moduleFor: (r) => parentModule(r),
+      alsoVisibleToFor: (r) => parentDef(r).alsoVisibleTo ?? [],
       actions: { create: ['add', 'edit'], update: 'edit', delete: 'edit' },
       delegate: (tx) => tx.attachment,
       createSchema: attachmentCreate,

@@ -251,3 +251,62 @@ model Attachment {
 
   @@index([entity, recordId])
 }
+
+// ---------- Milk ----------
+
+enum MilkSession {
+  MORNING
+  EVENING
+}
+
+enum MilkUsageType {
+  CALF_FED
+  HOME
+  DISCARDED
+}
+
+/// Milk from one cow at one milking. A missing record means "not recorded", never zero.
+model MilkRecord {
+  id         String      @id @db.Uuid
+  animalId   String      @db.Uuid
+  date       String
+  session    MilkSession
+  quantityMl Int
+  note       String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  // One live record per cow/date/session: partial unique index in the migration.
+  @@index([date])
+  @@index([animalId, date])
+}
+
+/// Milk that was not sold: fed to calves, used at home, or thrown away.
+model MilkUsage {
+  id         String        @id @db.Uuid
+  date       String
+  type       MilkUsageType
+  quantityMl Int
+  animalId   String?       @db.Uuid
+  note       String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([date])
+}

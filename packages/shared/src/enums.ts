@@ -11,3 +11,13 @@ export type Language = (typeof LANGUAGES)[number];
 
 /** All farm dates are calendar days in Pakistan time. */
 export const FARM_TIMEZONE = 'Asia/Karachi';
+
+export const MILK_SESSIONS = ['MORNING', 'EVENING'] as const;
+export type MilkSession = (typeof MILK_SESSIONS)[number];
+
+/** Milk not sold. "Sold" comes from customer deliveries (Sales module). */
+export const MILK_USAGE_TYPES = ['CALF_FED', 'HOME', 'DISCARDED'] as const;
+export type MilkUsageType = (typeof MILK_USAGE_TYPES)[number];
+
+/** Most a cow can give in one milking (ml). Higher values are typing mistakes. */
+export const MAX_MILK_PER_SESSION_ML = 60_000;

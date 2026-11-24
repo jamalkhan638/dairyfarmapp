@@ -52,3 +52,27 @@ export const attachmentFields = z.object({
 });
 export const attachmentCreate = attachmentFields;
 export const attachmentUpdate = z.object({}).strict();
+
+// ---------- Milk ----------
+import { MAX_MILK_PER_SESSION_ML, MILK_SESSIONS, MILK_USAGE_TYPES } from './enums';
+
+/** One cow, one date, one session. 0 is a real recorded value; a missing record means "not recorded". */
+export const milkRecordCreate = z.object({
+  animalId: uuid,
+  date: isoDate,
+  session: z.enum(MILK_SESSIONS),
+  quantityMl: z.number().int().min(0).max(MAX_MILK_PER_SESSION_ML),
+  note: optionalText(500),
+});
+/** Cow, date and session are the record's identity; to move an entry, delete it and add it again. */
+export const milkRecordUpdate = milkRecordCreate.pick({ quantityMl: true, note: true }).partial();
+
+export const milkUsageCreate = z.object({
+  date: isoDate,
+  type: z.enum(MILK_USAGE_TYPES),
+  quantityMl: z.number().int().positive().max(1_000_000),
+  /** Optional: which cow's milk was discarded, or which calf was fed. */
+  animalId: uuid.nullable().optional(),
+  note: optionalText(500),
+});
+export const milkUsageUpdate = milkUsageCreate.partial();

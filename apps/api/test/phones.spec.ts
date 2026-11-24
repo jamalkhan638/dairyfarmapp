@@ -7,48 +7,12 @@ import request from 'supertest';
 import { randomUUID } from 'crypto';
 import { emptyPermissionMap } from '@dairy/shared';
 import { createApp, resetDb } from './helpers';
-import { NodeLocalDb } from './node-local-db';
-import { migrate } from '../../mobile/src/sync/schema';
-import { LocalRepo } from '../../mobile/src/sync/repo';
-import { OfflineError, SyncEngine, type SyncApi } from '../../mobile/src/sync/engine';
-import { addAnimal, changeStatus, loadAnimals, type Animal } from '../../mobile/src/domain/animals';
+import { Phone, login as loginAs } from './phone';
+import { addAnimal, changeStatus, loadAnimals } from '../../mobile/src/domain/animals';
+
+const login = (u: string, p: string) => loginAs(app, u, p);
 
 let app: INestApplication;
-
-class Phone {
-  db = new NodeLocalDb();
-  repo = new LocalRepo(this.db, { newId: randomUUID });
-  online = true;
-  engine: SyncEngine;
-  constructor(public userId: string, private token: string) {
-    const api: SyncApi = {
-      push: async (mutations) => {
-        if (!this.online) throw new OfflineError();
-        const r = await request(app.getHttpServer()).post('/api/sync/push').set('Authorization', `Bearer ${this.token}`).send({ mutations });
-        return r.body;
-      },
-      pull: async (cursor) => {
-        if (!this.online) throw new OfflineError();
-        const r = await request(app.getHttpServer()).get(`/api/sync/pull?cursor=${cursor}`).set('Authorization', `Bearer ${this.token}`);
-        return r.body;
-      },
-    };
-    this.engine = new SyncEngine(this.db, this.repo, api, () => this.userId);
-  }
-  async init() {
-    await migrate(this.db);
-    return this;
-  }
-  sync() { return this.engine.sync(); }
-  async animal(tag: string) {
-    return (await loadAnimals(this.repo)).find((a) => a.animal.tag === tag);
-  }
-}
-
-async function login(username: string, password: string) {
-  const r = await request(app.getHttpServer()).post('/api/auth/login').send({ username, password });
-  return { token: r.body.accessToken as string, id: r.body.user.id as string };
-}
 
 let owner: Phone;
 let worker: Phone;
@@ -61,8 +25,8 @@ beforeAll(async () => {
   perms.animals = { view: true, add: true, edit: true, delete: false };
   await request(app.getHttpServer()).post('/api/users').set('Authorization', `Bearer ${setup.body.accessToken}`).send({ name: 'Ali', username: 'ali', password: 'worker123', permissions: perms });
   const w = await login('ali', 'worker123');
-  owner = await new Phone(setup.body.user.id, setup.body.accessToken).init();
-  worker = await new Phone(w.id, w.token).init();
+  owner = await new Phone(app, setup.body.user.id, setup.body.accessToken).init();
+  worker = await new Phone(app, w.id, w.token).init();
 });
 
 afterAll(() => app.close());
@@ -194,7 +158,7 @@ it('status changes made offline show immediately and sync to the other phone', a
 
 it('a response lost on the way back does not create a duplicate', async () => {
   // Simulate: the server saves the change but the phone never hears back.
-  const lostPhone = await new Phone(worker.userId, (await login('ali', 'worker123')).token).init();
+  const lostPhone = await new Phone(app, worker.userId, (await login('ali', 'worker123')).token).init();
   await addAnimal(lostPhone.repo, lostPhone.userId, randomUUID, { tag: '309', sex: 'FEMALE', birthDateEstimated: false }, { status: 'MILKING', date: '2026-11-03' });
   const [row] = await lostPhone.repo.sendable(lostPhone.userId);
   const token = (await login('ali', 'worker123')).token;

@@ -16,7 +16,7 @@ import { RejectError } from '../common/errors';
 import { parseMutationData } from '../common/zod';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
 import { AuditService, diff, plain, sameValue } from '../audit/audit.service';
-import { EntityRegistry, toClient, type EntityContext, type EntityDef, type Row } from './entity-registry';
+import { canView, EntityRegistry, toClient, type EntityContext, type EntityDef, type Row } from './entity-registry';
 import { SyncFeed } from './sync-feed';
 
 const mutationSchema = z.object({
@@ -400,7 +400,7 @@ export class SyncService {
     if (!def) return [];
     const rows: Row[] = await def.delegate(this.prisma as unknown as Tx).findMany({ where: { id: { in: ids } } });
     return rows
-      .filter((r) => can(user.role, user.permissions, def.moduleFor(r), 'view'))
+      .filter((r) => canView(def, r, (m) => can(user.role, user.permissions, m, 'view')))
       .map((r) => toClient(r, def.hiddenFields));
   }
 }

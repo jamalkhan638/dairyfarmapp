@@ -1,6 +1,6 @@
 /** Shared sync protocol between the app's offline outbox and the server. */
 
-export const SYNC_ENTITIES = ['Animal', 'AnimalStatusChange', 'Attachment'] as const;
+export const SYNC_ENTITIES = ['Animal', 'AnimalStatusChange', 'Attachment', 'MilkRecord', 'MilkUsage'] as const;
 export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 
 /** Read-only entities the server sends to the app (never pushed). */

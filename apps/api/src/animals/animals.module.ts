@@ -32,7 +32,7 @@ export async function recomputeAnimalStatus(ctx: EntityContext, animalId: string
   await ctx.feed('Animal', animalId);
 }
 
-async function requireAnimal(tx: Tx, id: string, label: string) {
+export async function requireAnimal(tx: Tx, id: string, label: string) {
   const a = await tx.animal.findUnique({ where: { id } });
   if (!a || a.deletedAt) throw new RejectError('not_found', `${label} not found`);
   return a;
@@ -44,6 +44,7 @@ export class AnimalsModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'Animal',
       moduleFor: () => 'animals',
+      alsoVisibleTo: ['milk', 'health', 'feed', 'sales'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.animal,
       createSchema: animalCreate,
@@ -86,6 +87,7 @@ export class AnimalsModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'AnimalStatusChange',
       moduleFor: () => 'animals',
+      alsoVisibleTo: ['milk', 'health', 'feed'],
       // Changing an animal's status is an edit of that animal.
       actions: { create: 'edit', update: 'edit', delete: 'edit' },
       delegate: (tx) => tx.animalStatusChange,

@@ -6,9 +6,12 @@ import { api } from '../lib/api';
 import { local } from '../lib/db';
 import { formatDateTime } from '../lib/format';
 import { Body, Card, Muted, Notice } from './ui';
+import { fieldLabel, formatValue } from '../domain/entity-labels';
+import { useAnimalTags } from '../lib/use-animal-tags';
 
 /** Who changed what and when. Loaded from the server; the last copy is kept for offline viewing. */
-export function HistoryList({ entity, id, fieldLabel }: { entity: string; id: string; fieldLabel: (f: string) => string; }) {
+export function HistoryList({ entity, id }: { entity: string; id: string }) {
+  const tagOf = useAnimalTags();
   const { t } = useTranslation();
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
   const [offline, setOffline] = useState(false);
@@ -28,7 +31,6 @@ export function HistoryList({ entity, id, fieldLabel }: { entity: string; id: st
     })();
   }, [entity, id, key]);
 
-  const show = (v: unknown) => (v === null || v === undefined || v === '' ? t('emptyValue') : typeof v === 'boolean' ? (v ? t('yes') : t('no')) : typeof v === 'object' ? JSON.stringify(v) : String(v));
   const action = { CREATE: t('created'), UPDATE: t('updated'), DELETE: t('deleted'), CONFLICT_RESOLVED: t('conflictResolved') };
 
   return (
@@ -43,7 +45,7 @@ export function HistoryList({ entity, id, fieldLabel }: { entity: string; id: st
           {e.action !== 'CREATE'
             ? Object.entries(e.changes).map(([f, c]) => (
                 <Body key={f}>
-                  {fieldLabel(f)}: {show(c.from)} → {show(c.to)}
+                  {fieldLabel(entity, f)}: {formatValue(entity, f, c.from, tagOf)} → {formatValue(entity, f, c.to, tagOf)}
                 </Body>
               ))
             : null}

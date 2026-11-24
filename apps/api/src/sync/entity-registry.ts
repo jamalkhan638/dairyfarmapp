@@ -25,6 +25,13 @@ export interface EntityDef {
   name: SyncEntity;
   /** Which permission module controls this record. */
   moduleFor(record: Row): ModuleName;
+  /**
+   * Other modules whose "see" permission also lets a user see this record. Example: a worker
+   * who only records milk still needs the list of cows.
+   */
+  alsoVisibleTo?: ModuleName[];
+  /** Same, when it depends on the record (e.g. a photo is visible to whoever can see its parent). */
+  alsoVisibleToFor?(record: Row): ModuleName[];
   /** Permission needed for each operation; an array means any one of them is enough. */
   actions: { create: Action | Action[]; update: Action | Action[]; delete: Action | Action[] };
   delegate(tx: Tx): any;
@@ -72,4 +79,9 @@ export function toClient(record: Row, hidden: string[] = []): Row {
     out[k] = v instanceof Date ? v.toISOString() : typeof v === 'bigint' ? Number(v) : v;
   }
   return out;
+}
+
+/** Can this user see the record (download it, view its history)? */
+export function canView(def: EntityDef, record: Row, check: (m: ModuleName) => boolean): boolean {
+  return check(def.moduleFor(record)) || (def.alsoVisibleTo ?? []).some(check) || (def.alsoVisibleToFor?.(record) ?? []).some(check);
 }

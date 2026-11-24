@@ -97,7 +97,7 @@ export default function UserEdit() {
       {!isNew ? (
         <>
           <Section>{t('history')}</Section>
-          <HistoryList entity="User" id={id} fieldLabel={(f) => (f === 'permissions' ? t('permissions') : f === 'active' ? t('activeAccount') : f === 'role' ? t('role') : f === 'name' ? t('name') : f)} />
+          <HistoryList entity="User" id={id} />
         </>
       ) : null}
     </Screen>

@@ -6,7 +6,8 @@ import { useLocalQuery, useUserNames } from '../../../lib/hooks';
 import { local } from '../../../lib/db';
 import { useSession } from '../../../lib/session';
 import { formatDateTime } from '../../../lib/format';
-import { entityLabel, fieldLabel, recordTitle } from '../../../domain/entity-labels';
+import { entityLabel, fieldLabel, formatValue, recordTitle } from '../../../domain/entity-labels';
+import { useAnimalTags } from '../../../lib/use-animal-tags';
 import { Body, Button, Card, Field, Muted, Notice, Screen, Title } from '../../../components/ui';
 import type { ResolveData } from '@dairy/shared';
 
@@ -19,6 +20,7 @@ export default function ConflictScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { me } = useSession();
   const names = useUserNames();
+  const tagOf = useAnimalTags();
   const { data: rec } = useLocalQuery(() => local().repo.get<any>('SyncConflict', id), [id]);
   const [custom, setCustom] = useState<Record<string, string>>({});
   const [newTag, setNewTag] = useState('');
@@ -52,7 +54,7 @@ export default function ConflictScreen() {
 
   return (
     <Screen>
-      <Title>{entityLabel(c.entity)} {recordTitle(c.entity, c.theirs ?? mine)}</Title>
+      <Title>{entityLabel(c.entity)} {recordTitle(c.entity, c.theirs ?? mine, tagOf)}</Title>
       <Notice tone="warn" text={explain} />
       {c.theirs ? <Muted>{t('changedBy', { name: names.get(c.theirs.updatedById) ?? t('unknownUser') })} · {formatDateTime(c.theirs.clientUpdatedAt ?? c.theirs.updatedAt)}</Muted> : null}
 
@@ -60,8 +62,8 @@ export default function ConflictScreen() {
         ? fields.map((f) => (
             <Card key={f}>
               <Body style={{ fontWeight: '700' }}>{fieldLabel(c.entity, f)}</Body>
-              <Muted>{t('theirs')}: {show(theirs[f], t('emptyValue'))}</Muted>
-              <Body>{t('mine')}: {show(mine[f], t('emptyValue'))}</Body>
+              <Muted>{t('theirs')}: {formatValue(c.entity, f, theirs[f], tagOf)}</Muted>
+              <Body>{t('mine')}: {formatValue(c.entity, f, mine[f], tagOf)}</Body>
             </Card>
           ))
         : null}
