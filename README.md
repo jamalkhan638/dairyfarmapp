@@ -22,6 +22,8 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - Conflicts: edits to different fields merge; same field → user decides, nothing overwritten
 - Urdu (right-to-left) and English, switchable in the app
 
+Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
+
 Next phases: Milk → Customers & sales → Feed & suppliers → Expenses & capital → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
@@ -52,7 +54,7 @@ Needs Node.js 20+ and PostgreSQL 14+.
    ```
    Install **Expo Go** from the Play Store on your Android phone and scan the QR code.
    The phone and computer must be on the same Wi-Fi.
-6. In the app, tap **Server settings**. Enter `http://<your computer's Wi-Fi IP>:3000/api`, tap **Check connection**, then **First-time setup** and create the owner account.
+6. In the app, tap **Server settings**. Enter `http://<your computer's Wi-Fi IP>:3000/api` (the built-in default is the live server, `https://dairy.supplymeadow.site/api`), tap **Check connection**, then **First-time setup** and create the owner account.
 
 ## Verify Phase 1
 

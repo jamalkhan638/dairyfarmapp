@@ -1,0 +1,60 @@
+# Dairy Farm server: its own database, photo storage and backups.
+# Nothing here is shared with other apps on the server.
+name: dairy
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dairy
+      POSTGRES_USER: dairy
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dairy -d dairy"]
+      interval: 10s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://dairy:${DB_PASSWORD}@db:5432/dairy
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/.env}
+      SETUP_CODE: ${SETUP_CODE:?set SETUP_CODE in deploy/.env}
+      STORAGE_DRIVER: local
+      LOCAL_STORAGE_DIR: /data/files
+    volumes:
+      - files:/data/files
+    # Only reachable from this server; the web server (nginx) forwards HTTPS traffic to it.
+    ports:
+      - "127.0.0.1:${API_PORT:-3100}:3000"
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: dairy
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: dairy
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - files:/data/files:ro
+      - ${BACKUP_DIR:-/var/backups/dairy}:/backups
+    entrypoint: ["sh", "/backup.sh"]
+
+volumes:
+  pgdata:
+  files:

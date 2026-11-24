@@ -28,7 +28,7 @@
     ],
     "extra": {
       "supportsRTL": true,
-      "apiUrl": "http://192.168.1.10:3000/api"
+      "apiUrl": "https://dairy.supplymeadow.site/api"
     }
   }
 }
