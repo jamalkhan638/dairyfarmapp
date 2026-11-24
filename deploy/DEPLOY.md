@@ -3,20 +3,16 @@
 The dairy app runs in its own Docker containers: its own database, photo storage and daily backups.
 It shares nothing with SupplyMeadow except the server itself and Caddy (the HTTPS web server).
 
-## 1. Subdomain (once)
+## 1. Subdomain: already done
 
-In the DNS settings of `supplymeadow.site`, add a record:
-
-| Type | Name  | Value                     |
-|------|-------|---------------------------|
-| A    | dairy | your Contabo server's IP  |
-
-Check it after a few minutes: `ping dairy.supplymeadow.site` should show your server's IP.
+The DNS for every `*.supplymeadow.site` name already points to this server (158.220.114.117),
+and SupplyMeadow has reserved the name `dairy`, so no company can take it. Nothing to do here.
 
 ## 2. Get the code onto the server
 
 ```bash
-cd /opt
+ssh deploymeadow@158.220.114.117
+cd ~
 git clone https://github.com/jamalkhan638/dairyfarmapp.git
 cd dairyfarmapp
 ```
@@ -38,23 +34,32 @@ curl http://127.0.0.1:3100/api/health
 ```
 The second command should answer `{"ok":true,...}`.
 
-## 5. HTTPS through Caddy (shared with SupplyMeadow)
+## 5. HTTPS through Caddy: already set up (24 Nov 2026)
 
-Caddy already owns ports 80/443 and handles certificates. Do **not** install nginx or Traefik.
-SupplyMeadow's `update.sh` overwrites `/etc/caddy/Caddyfile`, so the dairy site lives in its own file,
-which SupplyMeadow's Caddyfile loads with `import /etc/caddy/sites/*.caddy`.
-That line must be in SupplyMeadow's repository (`deploy/Caddyfile`); it is added on the SupplyMeadow side.
+Done on the SupplyMeadow side:
+- SupplyMeadow's `deploy/Caddyfile` has `import /etc/caddy/sites/*.caddy`, right after its
+  `{ on_demand_tls … }` global block. Its `update.sh` installs that Caddyfile.
+- `/etc/caddy/sites/dairy.caddy` exists, containing:
+  ```
+  dairy.supplymeadow.site {
+  	reverse_proxy 127.0.0.1:3100
+  }
+  ```
+  `deploy/dairy.caddy` in this repo is the same, plus a 12 MB upload limit (optional).
 
+Rules for the shared server:
+- The dairy API must stay on **127.0.0.1:3100**. SupplyMeadow uses 3000.
+- Never add a wildcard or catch-all site for dairy. SupplyMeadow owns those.
+- Don't edit `/etc/caddy/Caddyfile` directly; SupplyMeadow's updates overwrite it.
+
+Until the dairy containers are running, `https://dairy.supplymeadow.site` shows a 502 error. That's expected.
+Once they're running, test with **`https://dairy.supplymeadow.site/api/health`**. It should answer `{"ok":true,...}`.
+The main address (`/`) only shows "not found", because the API lives under `/api`.
+
+To switch the dairy site off without affecting SupplyMeadow:
 ```bash
-mkdir -p /etc/caddy/sites
-cp /opt/dairyfarmapp/deploy/dairy.caddy /etc/caddy/sites/dairy.caddy
-caddy validate --config /etc/caddy/Caddyfile
-systemctl reload caddy
+sudo rm /etc/caddy/sites/dairy.caddy && sudo systemctl reload caddy
 ```
-Then from any computer, `https://dairy.supplymeadow.site/api/health` should answer `{"ok":true,...}`.
-The first request can take a few seconds while Caddy gets the certificate.
-
-If `API_PORT` in `deploy/.env` is not 3100, change the port in `/etc/caddy/sites/dairy.caddy` to match.
 
 ## 6. Create the owner account
 
@@ -64,7 +69,7 @@ Tap **Server settings → Check connection → First-time setup**, enter the `SE
 ## Updating to a new version
 
 ```bash
-cd /opt/dairyfarmapp
+cd ~/dairyfarmapp
 git pull
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 ```
@@ -82,7 +87,7 @@ Database changes are applied automatically when the server starts.
 ### Restore (only if something went wrong)
 
 ```bash
-cd /opt/dairyfarmapp
+cd ~/dairyfarmapp
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env stop api
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec -T db \
   pg_restore --clean --if-exists -U dairy -d dairy < /var/backups/dairy/daily/dairy-YYYY-MM-DD.dump
