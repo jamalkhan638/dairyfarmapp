@@ -1,0 +1,253 @@
+// Dairy farm database.
+//
+// Conventions for every synced business record:
+//   id              UUID generated on the phone (so offline records keep their id)
+//   version         increases by 1 on every change; used to detect conflicting edits
+//   createdById     always the authenticated user; never changes after creation
+//   updatedById     the authenticated user who last changed it
+//   clientCreatedAt / clientUpdatedAt  when the user saved it on the phone
+//   deletedAt       soft delete; records are never physically removed
+// Farm dates are "YYYY-MM-DD" strings in Pakistan time.
+// Money is in paisa, milk in millilitres, feed in grams (all integers).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  WORKER
+}
+
+enum AnimalStatus {
+  MILKING
+  DRY
+  YOUNG
+  SOLD
+  DECEASED
+}
+
+enum Sex {
+  FEMALE
+  MALE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  CONFLICT_RESOLVED
+}
+
+enum ConflictStatus {
+  OPEN
+  RESOLVED
+}
+
+enum ConflictType {
+  DUPLICATE
+  EDIT
+  EDIT_DELETED
+  DELETE_EDITED
+}
+
+// ---------- Users & access ----------
+
+model User {
+  id           String   @id @db.Uuid
+  name         String
+  username     String   @unique
+  passwordHash String
+  role         Role
+  active       Boolean  @default(true)
+  language     String   @default("ur")
+  /// Increment to invalidate all of a user's sessions and force a full re-download.
+  accessVersion Int     @default(1)
+  createdById  String?  @db.Uuid
+  createdAt    DateTime @default(now())
+  updatedById  String?  @db.Uuid
+  updatedAt    DateTime @updatedAt
+  version      Int      @default(1)
+
+  permissions   Permission[]
+  refreshTokens RefreshToken[]
+}
+
+model Permission {
+  userId    String  @db.Uuid
+  module    String
+  canView   Boolean @default(false)
+  canAdd    Boolean @default(false)
+  canEdit   Boolean @default(false)
+  canDelete Boolean @default(false)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, module])
+}
+
+model RefreshToken {
+  id         String    @id @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String
+  deviceName String?
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ---------- History & sync bookkeeping ----------
+
+/// One row per change to any record: who, what, when, and the field values before/after.
+model AuditLog {
+  id         BigInt      @id @default(autoincrement())
+  entity     String
+  recordId   String      @db.Uuid
+  action     AuditAction
+  userId     String      @db.Uuid
+  at         DateTime    @default(now())
+  clientTime DateTime?
+  mutationId String?     @db.Uuid
+  /// { field: { from, to } }
+  changes    Json
+
+  @@index([entity, recordId])
+}
+
+/// Every mutation id the server has processed, so a re-sent change is applied only once.
+model SyncMutation {
+  id          String   @id @db.Uuid
+  userId      String   @db.Uuid
+  entity      String
+  recordId    String   @db.Uuid
+  op          String
+  /// The MutationResult returned the first time.
+  result      Json
+  processedAt DateTime @default(now())
+}
+
+/// Ordered change feed the phones download from. seq order = commit order
+/// because all writes take the same advisory lock.
+model SyncChange {
+  seq      BigInt   @id @default(autoincrement())
+  entity   String
+  recordId String   @db.Uuid
+  at       DateTime @default(now())
+
+  @@index([entity, recordId])
+}
+
+/// A change from a phone that could not be applied without overwriting someone else's data.
+model SyncConflict {
+  id            String         @id @db.Uuid
+  entity        String
+  recordId      String         @db.Uuid
+  type          ConflictType
+  status        ConflictStatus @default(OPEN)
+  mutationId    String         @db.Uuid
+  /// The mutation as the phone sent it.
+  mine          Json
+  /// The server record at the time of the conflict.
+  theirs        Json?
+  theirsVersion Int?
+  /// For DUPLICATE: the id of the existing record it collides with.
+  existingId    String?        @db.Uuid
+  resolution    String?
+  createdById   String         @db.Uuid
+  createdAt     DateTime       @default(now())
+  resolvedById  String?        @db.Uuid
+  resolvedAt    DateTime?
+  version       Int            @default(1)
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status])
+}
+
+// ---------- Animals ----------
+
+model Animal {
+  id                 String       @id @db.Uuid
+  tag                String
+  name               String?
+  breed              String?
+  sex                Sex          @default(FEMALE)
+  birthDate          String?
+  birthDateEstimated Boolean      @default(false)
+  purchaseDate       String?
+  purchasePricePaisa Int?
+  motherId           String?      @db.Uuid
+  photoId            String?      @db.Uuid
+  notes              String?
+  /// Derived from the latest AnimalStatusChange; not edited directly.
+  status             AnimalStatus @default(MILKING)
+  statusDate         String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  statusChanges AnimalStatusChange[]
+
+  // Tag uniqueness among non-deleted animals is a partial unique index (see migration).
+  @@index([tag])
+}
+
+model AnimalStatusChange {
+  id            String       @id @db.Uuid
+  animalId      String       @db.Uuid
+  status        AnimalStatus
+  effectiveDate String
+  reason        String?
+  animal        Animal       @relation(fields: [animalId], references: [id])
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([animalId, effectiveDate])
+}
+
+// ---------- Files ----------
+
+/// Photo/receipt metadata. The file itself lives in object storage under storageKey.
+model Attachment {
+  id          String    @id @db.Uuid
+  entity      String
+  recordId    String    @db.Uuid
+  contentType String
+  sizeBytes   Int
+  storageKey  String
+  uploadedAt  DateTime?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([entity, recordId])
+}
