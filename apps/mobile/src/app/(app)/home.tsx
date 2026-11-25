@@ -66,6 +66,8 @@ export default function Home() {
       {can('sales', 'view') ? <Button title={t('customers')} variant="secondary" onPress={() => router.push('/sales')} /> : null}
       {can('feed', 'add') ? <Button title={t('recordFeeding')} onPress={() => router.push('/feed/feeding')} /> : null}
       {can('feed', 'view') ? <Button title={t('feed')} variant="secondary" onPress={() => router.push('/feed')} /> : null}
+      {can('expenses', 'add') ? <Button title={t('addExpense')} onPress={() => router.push('/money/expense')} /> : null}
+      {can('expenses', 'view') || can('finance', 'view') ? <Button title={t('money')} variant="secondary" onPress={() => router.push('/money')} /> : null}
       {can('animals', 'view') ? <Button title={t('animals')} onPress={() => router.push('/animals')} /> : null}
       {can('animals', 'add') ? <Button title={t('addAnimal')} variant="secondary" onPress={() => router.push('/animals/new')} /> : null}
       <Button title={t('settings')} variant="secondary" onPress={() => router.push('/settings')} />

@@ -28,7 +28,7 @@ const CASH_SALE: LinkedPaymentSpec = {
   amountField: 'amountPaisa',
   auditFields: PAYMENT_FIELDS,
 };
-const managed = refuseManagedPayment('deliveryId', 'sale');
+const managed = refuseManagedPayment({ deliveryId: 'cash sale' });
 
 /** Customers, their rates, milk deliveries (cash or credit) and payments received. */
 @Module({})
@@ -70,6 +70,7 @@ export class SalesModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'MilkDelivery',
       moduleFor: () => 'sales',
+      alsoVisibleTo: ['reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.milkDelivery,
       createSchema: milkDeliveryCreate,
@@ -99,6 +100,7 @@ export class SalesModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'CustomerPayment',
       moduleFor: () => 'sales',
+      alsoVisibleTo: ['finance', 'reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.customerPayment,
       createSchema: customerPaymentCreate,

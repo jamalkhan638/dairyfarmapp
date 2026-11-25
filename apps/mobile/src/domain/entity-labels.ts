@@ -15,6 +15,7 @@ const ENTITY_KEYS: Record<string, string> = {
   Animal: 'animal', AnimalStatusChange: 'status', Attachment: 'photo', SyncConflict: 'conflict', MilkRecord: 'milk', MilkUsage: 'usage',
   Customer: 'customer', CustomerRate: 'rateShort', MilkDelivery: 'delivery', CustomerPayment: 'payment',
   Supplier: 'supplier', FeedItem: 'feedItem', FeedPurchase: 'purchase', SupplierPayment: 'supplierPayment', FeedConsumption: 'feeding', StockAdjustment: 'stockCount',
+  Expense: 'expense', CapitalEntry: 'capitalEntry', FarmSettings: 'settings',
 };
 export function entityLabel(entity: string) {
   return ENTITY_KEYS[entity] ? t(ENTITY_KEYS[entity]) : entity;
@@ -30,6 +31,7 @@ const FIELD_KEYS: Record<string, string> = {
   ratePaisaPerLitre: 'rateShort', effectiveFrom: 'rateFrom', amountPaisa: 'amountShort', method: 'method', cashPaymentId: 'payment', deliveryId: 'delivery',
   feedItemId: 'feedItem', supplierId: 'supplier', category: 'category', bagWeightGrams: 'bagWeight', quantityGrams: 'kgFed', wastedGrams: 'kgWasted',
   bags: 'bagsCount', totalPaisa: 'totalAmount', costPerKgPaisa: 'avgPrice', paymentType: 'paymentType', purchaseId: 'purchase', animalIds: 'fedTo', changeGrams: 'adjustmentWillBe',
+  description: 'description', receiptPhotoId: 'receipt', expenseId: 'expense', openingCashPaisa: 'openingCash', openingCashDate: 'openingCashDate', farmName: 'farmName',
 };
 export function fieldLabel(_entity: string, field: string) {
   return FIELD_KEYS[field] ? t(FIELD_KEYS[field]) : field;
@@ -44,7 +46,7 @@ export function formatValue(entity: string, field: string, v: unknown, l: Lookup
   if (['quantityGrams', 'wastedGrams', 'bagWeightGrams', 'changeGrams'].includes(field) && typeof v === 'number') return `${(v / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 })} ${t('kgUnit')}`;
   if (field === 'totalPaisa' && typeof v === 'number') return formatPKR(v);
   if (field === 'costPerKgPaisa' && typeof v === 'number') return `${formatPKR(v)}/${t('kgUnit')}`;
-  if (field === 'category') return t(`fc_${v}`);
+  if (field === 'category') return entity === 'Expense' ? t(`ec_${v}`) : t(`fc_${v}`);
   if (field === 'paymentType') return t(`st_${v}`);
   if (field === 'feedItemId' && typeof v === 'string') return l.itemOf?.(v) ?? '—';
   if (field === 'supplierId') return typeof v === 'string' ? (l.supplierOf?.(v) ?? '—') : t('noSupplier');
@@ -54,7 +56,10 @@ export function formatValue(entity: string, field: string, v: unknown, l: Lookup
   if (['date', 'birthDate', 'purchaseDate', 'effectiveDate', 'statusDate', 'effectiveFrom'].includes(field) && typeof v === 'string') return formatDate(v);
   if (field === 'session') return v === 'MORNING' ? t('morning') : t('evening');
   if (field === 'status' && entity !== 'SyncConflict') return t(`s_${v}`);
-  if (field === 'type') return t(`u_${v}`);
+  if (field === 'type') return entity === 'CapitalEntry' ? t(`ct_${v}`) : t(`u_${v}`);
+  if (field === 'openingCashPaisa' && typeof v === 'number') return formatPKR(v);
+  if (field === 'openingCashDate' && typeof v === 'string') return formatDate(v);
+  if (field === 'receiptPhotoId' || field === 'expenseId') return '✓';
   if (field === 'saleType' || field === 'defaultSaleType') return t(`st_${v}`);
   if (field === 'method') return t(`pm_${v}`);
   if (field === 'sex') return v === 'FEMALE' ? t('female') : t('male');
@@ -82,6 +87,9 @@ export function recordTitle(entity: string, data: Record<string, any> | null | u
     case 'SupplierPayment': return `${l.supplierOf?.(data.supplierId) ?? ''} · ${formatPKR(data.amountPaisa)}`;
     case 'FeedConsumption': return `${l.itemOf?.(data.feedItemId) ?? ''} · ${formatDate(data.date)}`;
     case 'StockAdjustment': return `${l.itemOf?.(data.feedItemId) ?? ''} · ${formatDate(data.date)}`;
+    case 'Expense': return `${t(`ec_${data.category}`)} · ${formatDate(data.date)} · ${formatPKR(data.amountPaisa)}`;
+    case 'CapitalEntry': return `${t(`ct_${data.type}`)} · ${formatDate(data.date)} · ${formatPKR(data.amountPaisa)}`;
+    case 'FarmSettings': return t('settings');
     default: return '';
   }
 }

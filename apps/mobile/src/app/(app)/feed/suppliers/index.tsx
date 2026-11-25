@@ -13,7 +13,7 @@ export default function Suppliers() {
   const { can } = useSession();
   const data = useFeedData();
   if (!data) return <Screen>{null}</Screen>;
-  const bal = supplierBalances(data.purchases.map((p) => p.data), data.payments.map((p) => p.data));
+  const bal = supplierBalances(data.purchases.map((p) => p.data), data.payments.map((p) => p.data), data.expenses);
   return (
     <Screen footer={can('feed', 'add') ? <Button title={t('addSupplier')} onPress={() => router.push('/feed/supplier')} /> : undefined}>
       {data.suppliers.length === 0 ? <Muted>{t('noSuppliers')}</Muted> : null}

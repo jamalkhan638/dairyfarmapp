@@ -28,7 +28,7 @@ export default function SupplierForm() {
   }, [rec, filled]);
   if (!can('feed', id ? 'edit' : 'add')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
-  const used = !!id && !!data && (data.purchases.some((p) => p.data.supplierId === id) || data.payments.some((p) => p.data.supplierId === id));
+  const used = !!id && !!data && (data.purchases.some((p) => p.data.supplierId === id) || data.payments.some((p) => p.data.supplierId === id) || data.expenses.some((e) => e.supplierId === id && !e.deletedAt));
 
   const save = async () => {
     const name = f.name.trim();

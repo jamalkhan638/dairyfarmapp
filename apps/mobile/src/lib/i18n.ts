@@ -42,7 +42,7 @@ const en = {
   emptyValue: '(empty)',
   // home
   home: 'Home', hello: 'Assalam-o-Alaikum, {{name}}', herd: 'Herd', animals: 'Animals', settings: 'Settings',
-  comingSoon: 'Coming in the next phases: expenses, health and reports.',
+  comingSoon: 'Coming in the next phases: health & breeding, reminders and reports.',
   // animals
   addAnimal: 'Add animal', editAnimal: 'Edit animal', animal: 'Animal', tag: 'Tag number', breed: 'Breed', sex: 'Sex', female: 'Female', male: 'Male',
   birthDate: 'Birth date', birthDateEstimated: 'Birth date is an estimate', age: 'Age', purchaseDate: 'Purchase date', purchasePrice: 'Purchase price (PKR)',
@@ -116,7 +116,23 @@ const en = {
   stockCount: 'Stock count', countedKg: 'Counted in store (kg)', appShows: 'App shows', adjustmentWillBe: 'Correction', noChange: 'No correction needed',
   noFeedItems: 'No feed items yet. Add wanda, green fodder, silage, minerals…', noSuppliers: 'No suppliers yet.', chooseItem: 'Choose feed item',
   chooseAnimals: 'Choose at least one animal', invalidKg: 'Enter kg like 12.5', itemNameTaken: 'Another feed item already has this name', supplierNameTaken: 'Another supplier already has this name',
-  feedLast30: 'Feed, last 30 days', perAnimal: 'Per animal', fullAccessDefault: 'New users get full access. Untick anything they should not do.',
+  feedLast30: 'Feed, last 30 days',
+  // money
+  money: 'Money', cashBook: 'Cash book', cashInHand: 'Cash in hand (all methods)', moneyIn: 'Money in', moneyOut: 'Money out',
+  openingCash: 'Opening cash balance (Rs)', openingCashDate: 'Opening balance date', setOpening: 'Opening balance', openingHelp: 'Money you had (cash + bank + mobile) on the day you started using the app. The cash book counts from this date.',
+  balanceStart: 'Balance at start', balanceEnd: 'Balance at end', cashNotProfit: 'Cash balance is not profit: it includes capital money and credit that is still unpaid.',
+  expenses: 'Expenses', expense: 'Expense', addExpense: 'Add expense', editExpense: 'Edit expense', operatingExpenses: 'Operating expenses',
+  ec_VET: 'Vet', ec_MEDICINE: 'Medicines', ec_LABOUR: 'Labour', ec_ELECTRICITY: 'Electricity', ec_TRANSPORT: 'Transport', ec_REPAIRS: 'Repairs', ec_OTHER: 'Other',
+  description: 'Description', paidNow: 'Paid now', onCredit: 'On credit (pay later)', forAnimal: 'For animal (optional)', supplierOptional: 'Supplier (optional)',
+  expenseCreditNeedsSupplier: 'Choose a supplier for an expense on credit.', expenseFixedFields: 'Supplier and paid-now/credit cannot be changed. Delete and add again if needed.',
+  receipt: 'Receipt photo', noReceipt: 'No receipt photo',
+  capital: 'Capital & owner money', capitalEntry: 'Capital entry', addCapital: 'Add capital entry', editCapital: 'Edit capital entry',
+  ct_ANIMAL_PURCHASE: 'Cow / animal bought', ct_EQUIPMENT: 'Equipment', ct_OWNER_INVESTMENT: 'Owner put money in', ct_OWNER_WITHDRAWAL: 'Owner took money out', ct_ANIMAL_SALE: 'Animal sold',
+  capitalNote: 'Capital entries change the cash balance but are not daily expenses, so they are not part of operating profit.',
+  cl_customer_payment: 'From customer', cl_supplier_payment: 'To supplier', cl_market_purchase: 'Feed (cash)', cl_expense: 'Expense', cl_capital: 'Capital',
+  addToCashBook: 'Also add the purchase price to the cash book (cow bought)', farmName: 'Farm name', thisMonthIn: 'In this month', thisMonthOut: 'Out this month',
+  allExpenses: 'All expenses', noOpeningSet: 'Set your opening balance so the cash book is right.',
+ perAnimal: 'Per animal', fullAccessDefault: 'New users get full access. Untick anything they should not do.',
 };
 
 type Dict = typeof en;
@@ -156,7 +172,7 @@ const ur: Dict = {
   history: 'تبدیلیوں کی تاریخ', historyOffline: 'تاریخ انٹرنیٹ پر دکھائی جاتی ہے۔', created: 'شامل کیا', updated: 'تبدیل کیا', deleted: 'حذف کیا', conflictResolved: 'ٹکراؤ حل کیا',
   emptyValue: '(خالی)',
   home: 'ہوم', hello: 'السلام علیکم، {{name}}', herd: 'ریوڑ', animals: 'جانور', settings: 'ترتیبات',
-  comingSoon: 'اگلے مراحل میں: اخراجات، صحت اور رپورٹس۔',
+  comingSoon: 'اگلے مراحل میں: صحت و افزائش، یاد دہانیاں اور رپورٹس۔',
   addAnimal: 'جانور شامل کریں', editAnimal: 'جانور کی تفصیل تبدیل کریں', animal: 'جانور', tag: 'ٹیگ نمبر', breed: 'نسل', sex: 'جنس', female: 'مادہ', male: 'نر',
   birthDate: 'تاریخ پیدائش', birthDateEstimated: 'تاریخ پیدائش اندازاً ہے', age: 'عمر', purchaseDate: 'خریداری کی تاریخ', purchasePrice: 'قیمت خرید (روپے)',
   notes: 'نوٹ', photo: 'تصویر', takePhoto: 'تصویر کھینچیں', choosePhoto: 'تصویر منتخب کریں', removePhoto: 'تصویر ہٹائیں',
@@ -225,7 +241,22 @@ const ur: Dict = {
   stockCount: 'اسٹاک گنتی', countedKg: 'اسٹور میں گنا گیا (کلو)', appShows: 'ایپ میں', adjustmentWillBe: 'درستگی', noChange: 'درستگی کی ضرورت نہیں',
   noFeedItems: 'ابھی کوئی چارہ نہیں۔ ونڈا، سبز چارہ، سائیلج، منرلز شامل کریں…', noSuppliers: 'ابھی کوئی سپلائر نہیں۔', chooseItem: 'چارہ منتخب کریں',
   chooseAnimals: 'کم از کم ایک جانور منتخب کریں', invalidKg: 'کلو اس طرح لکھیں: 12.5', itemNameTaken: 'اس نام کا چارہ پہلے سے موجود ہے', supplierNameTaken: 'اس نام کا سپلائر پہلے سے موجود ہے',
-  feedLast30: 'چارہ، پچھلے 30 دن', perAnimal: 'فی جانور', fullAccessDefault: 'نئے صارف کو مکمل اجازت ملتی ہے۔ جو کام نہ کرنے دینا ہو اس کا نشان ہٹا دیں۔',
+  feedLast30: 'چارہ، پچھلے 30 دن',
+  money: 'رقم', cashBook: 'کیش بک', cashInHand: 'موجودہ رقم (تمام ذرائع)', moneyIn: 'آمد', moneyOut: 'خرچ',
+  openingCash: 'ابتدائی رقم (روپے)', openingCashDate: 'ابتدائی رقم کی تاریخ', setOpening: 'ابتدائی رقم', openingHelp: 'ایپ شروع کرنے کے دن آپ کے پاس موجود رقم (نقد + بینک + موبائل)۔ کیش بک اسی تاریخ سے حساب کرتی ہے۔',
+  balanceStart: 'شروع میں رقم', balanceEnd: 'آخر میں رقم', cashNotProfit: 'موجودہ رقم منافع نہیں ہے: اس میں سرمایہ اور ادھار شامل ہیں جو ابھی ادا نہیں ہوا۔',
+  expenses: 'اخراجات', expense: 'خرچ', addExpense: 'خرچ درج کریں', editExpense: 'خرچ تبدیل کریں', operatingExpenses: 'روزمرہ اخراجات',
+  ec_VET: 'ڈاکٹر', ec_MEDICINE: 'ادویات', ec_LABOUR: 'مزدوری', ec_ELECTRICITY: 'بجلی', ec_TRANSPORT: 'کرایہ / ٹرانسپورٹ', ec_REPAIRS: 'مرمت', ec_OTHER: 'دیگر',
+  description: 'تفصیل', paidNow: 'ابھی ادا کیا', onCredit: 'ادھار (بعد میں ادائیگی)', forAnimal: 'کس جانور کے لیے (اختیاری)', supplierOptional: 'سپلائر (اختیاری)',
+  expenseCreditNeedsSupplier: 'ادھار خرچ کے لیے سپلائر منتخب کریں۔', expenseFixedFields: 'سپلائر اور نقد/ادھار تبدیل نہیں ہو سکتے۔ ضرورت ہو تو حذف کر کے دوبارہ شامل کریں۔',
+  receipt: 'رسید کی تصویر', noReceipt: 'رسید کی تصویر نہیں',
+  capital: 'سرمایہ اور مالک کی رقم', capitalEntry: 'سرمایہ اندراج', addCapital: 'سرمایہ اندراج کریں', editCapital: 'سرمایہ اندراج تبدیل کریں',
+  ct_ANIMAL_PURCHASE: 'گائے / جانور خریدا', ct_EQUIPMENT: 'سامان / مشین', ct_OWNER_INVESTMENT: 'مالک نے رقم ڈالی', ct_OWNER_WITHDRAWAL: 'مالک نے رقم نکالی', ct_ANIMAL_SALE: 'جانور بیچا',
+  capitalNote: 'سرمایہ اندراج موجودہ رقم بدلتے ہیں مگر روزمرہ خرچ نہیں، اس لیے منافع میں شامل نہیں ہوتے۔',
+  cl_customer_payment: 'گاہک سے', cl_supplier_payment: 'سپلائر کو', cl_market_purchase: 'چارہ (نقد)', cl_expense: 'خرچ', cl_capital: 'سرمایہ',
+  addToCashBook: 'قیمت خرید کیش بک میں بھی درج کریں (جانور خریدا)', farmName: 'فارم کا نام', thisMonthIn: 'اس مہینے آمد', thisMonthOut: 'اس مہینے خرچ',
+  allExpenses: 'تمام اخراجات', noOpeningSet: 'کیش بک درست رکھنے کے لیے ابتدائی رقم درج کریں۔',
+ perAnimal: 'فی جانور', fullAccessDefault: 'نئے صارف کو مکمل اجازت ملتی ہے۔ جو کام نہ کرنے دینا ہو اس کا نشان ہٹا دیں۔',
 };
 
 export type TKey = keyof Dict;

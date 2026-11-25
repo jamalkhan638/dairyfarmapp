@@ -220,3 +220,49 @@ export const stockAdjustmentCreate = z.object({
   reason: optionalText(300),
 });
 export const stockAdjustmentUpdate = stockAdjustmentCreate.pick({ changeGrams: true, reason: true }).partial();
+
+// ---------- Expenses, capital, farm settings ----------
+import { CAPITAL_TYPES, EXPENSE_CATEGORIES } from './enums';
+
+export const expenseCreate = z.object({
+  date: isoDate,
+  category: z.enum(EXPENSE_CATEGORIES),
+  amountPaisa: z.number().int().positive().max(1_000_000_000),
+  description: optionalText(300),
+  /** Optional: who it was bought from. Needed for credit (adds to what we owe them). */
+  supplierId: uuid.nullable().optional(),
+  paymentType: z.enum(SALE_TYPES).default('CASH'),
+  /** How it was paid when paid now. */
+  method: z.enum(PAYMENT_METHODS).default('CASH'),
+  cashPaymentId: uuid.nullable().optional(),
+  /** Optional: the animal it was for (e.g. vet visit). */
+  animalId: uuid.nullable().optional(),
+  receiptPhotoId: uuid.nullable().optional(),
+});
+export const expenseUpdate = z.object({
+  date: isoDate,
+  category: z.enum(EXPENSE_CATEGORIES),
+  amountPaisa: z.number().int().positive().max(1_000_000_000),
+  description: optionalText(300),
+  method: z.enum(PAYMENT_METHODS),
+  animalId: uuid.nullable(),
+  receiptPhotoId: uuid.nullable(),
+}).partial();
+
+export const capitalEntryCreate = z.object({
+  date: isoDate,
+  type: z.enum(CAPITAL_TYPES),
+  amountPaisa: z.number().int().positive().max(10_000_000_000),
+  description: optionalText(300),
+  method: z.enum(PAYMENT_METHODS).default('CASH'),
+  animalId: uuid.nullable().optional(),
+  receiptPhotoId: uuid.nullable().optional(),
+});
+export const capitalEntryUpdate = capitalEntryCreate.partial().omit({ type: true }).extend({ type: z.enum(CAPITAL_TYPES).optional() });
+
+export const farmSettingsUpdate = z.object({
+  farmName: optionalText(80),
+  /** Money in hand when you started using the app. */
+  openingCashPaisa: z.number().int().min(-10_000_000_000).max(10_000_000_000),
+  openingCashDate: isoDate.nullable(),
+}).partial();

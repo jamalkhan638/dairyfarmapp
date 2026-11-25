@@ -4,6 +4,7 @@ export const SYNC_ENTITIES = [
   'Animal', 'AnimalStatusChange', 'Attachment', 'MilkRecord', 'MilkUsage',
   'Customer', 'CustomerRate', 'MilkDelivery', 'CustomerPayment',
   'Supplier', 'FeedItem', 'FeedPurchase', 'SupplierPayment', 'FeedConsumption', 'StockAdjustment',
+  'Expense', 'CapitalEntry', 'FarmSettings',
 ] as const;
 export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 

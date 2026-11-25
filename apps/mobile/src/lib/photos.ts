@@ -44,3 +44,19 @@ export function keepPhoto(tempUri: string, attachmentId: string): File {
   new File(tempUri).copySync(dest);
   return dest;
 }
+
+/**
+ * Save a picked photo for any record (animal photo, receipt): the file is kept on the
+ * phone, an Attachment record is queued, the upload waits for sync, and the record's
+ * photo field points to it.
+ */
+export async function attachPhoto(userId: string, entity: 'Animal' | 'Expense' | 'CapitalEntry', recordId: string, field: string, photo: { uri: string; size: number }) {
+  const { local, newId } = await import('./db');
+  const { repo, engine } = local();
+  const attId = newId();
+  const file = keepPhoto(photo.uri, attId);
+  await repo.create('Attachment', userId, attId, { entity, recordId, contentType: 'image/jpeg', sizeBytes: Math.max(1, file.size ?? photo.size) });
+  await engine.queueUpload(userId, attId, file.uri, 'image/jpeg');
+  await repo.update(entity, userId, recordId, { [field]: attId });
+  return attId;
+}

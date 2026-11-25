@@ -64,6 +64,7 @@ export default function AnimalDetail() {
           <RecordMeta data={a} syncState={record.syncState} />
           {can('animals', 'edit') ? <Button title={t('edit')} onPress={() => router.push(`/animals/${a.id}/edit`)} /> : null}
           {can('animals', 'edit') ? <Button title={t('changeStatus')} variant="secondary" onPress={() => router.push(`/animals/${a.id}/status`)} /> : null}
+          {can('expenses', 'add') ? <Button title={t('addExpense')} variant="secondary" onPress={() => router.push({ pathname: '/money/expense', params: { animalId: a.id } })} /> : null}
           {can('animals', 'delete') ? <Button title={t('delete')} variant="danger" onPress={remove} /> : null}
         </>
       ) : null}

@@ -48,6 +48,12 @@ export default function AppLayout() {
         <Stack.Screen name="feed/feeding" options={{ title: t('recordFeeding') }} />
         <Stack.Screen name="feed/log" options={{ title: t('feedingLog') }} />
         <Stack.Screen name="feed/stock-count" options={{ title: t('stockCount') }} />
+        <Stack.Screen name="money/index" options={{ title: t('money') }} />
+        <Stack.Screen name="money/expense" options={{ title: t('addExpense') }} />
+        <Stack.Screen name="money/expenses" options={{ title: t('expenses') }} />
+        <Stack.Screen name="money/capital" options={{ title: t('addCapital') }} />
+        <Stack.Screen name="money/cashbook" options={{ title: t('cashBook') }} />
+        <Stack.Screen name="money/opening" options={{ title: t('setOpening') }} />
         <Stack.Screen name="sync" options={{ title: t('syncDetails') }} />
         <Stack.Screen name="conflict/[id]" options={{ title: t('conflict') }} />
         <Stack.Screen name="history/[entity]/[id]" options={{ title: t('history') }} />

@@ -1,8 +1,9 @@
 import { addAnimal, type AnimalForm, validateAnimalForm, loadAnimals } from './animals';
 import type { AnimalFormValue } from '../components/AnimalForm';
 import { local, newId } from '../lib/db';
-import { keepPhoto } from '../lib/photos';
+import { attachPhoto } from '../lib/photos';
 import i18n from '../lib/i18n';
+import { farmToday } from '@dairy/shared';
 
 /** Quick check on the phone; the server checks again (e.g. two phones, same tag). */
 async function tagInUse(tag: string, selfId?: string) {
@@ -11,13 +12,9 @@ async function tagInUse(tag: string, selfId?: string) {
 }
 
 async function savePhoto(userId: string, animalId: string, v: AnimalFormValue) {
-  const { repo, engine } = local();
+  const { repo } = local();
   if (v.newPhoto) {
-    const attId = newId();
-    const file = keepPhoto(v.newPhoto.uri, attId);
-    await repo.create('Attachment', userId, attId, { entity: 'Animal', recordId: animalId, contentType: 'image/jpeg', sizeBytes: Math.max(1, file.size ?? v.newPhoto.size) });
-    await engine.queueUpload(userId, attId, file.uri, 'image/jpeg');
-    await repo.update('Animal', userId, animalId, { photoId: attId });
+    await attachPhoto(userId, 'Animal', animalId, 'photoId', v.newPhoto);
   } else if (v.removePhoto) {
     await repo.update('Animal', userId, animalId, { photoId: null });
   }
@@ -29,6 +26,13 @@ export async function saveNewAnimal(userId: string, v: AnimalFormValue): Promise
   if (await tagInUse(v.form.tag)) return { error: i18n.t('tagTaken') };
   const id = await addAnimal(local().repo, userId, newId, v.form, v.initial!);
   await savePhoto(userId, id, v);
+  if (v.addToCashBook && v.form.purchasePricePaisa) {
+    // The money paid for the cow is a capital entry (cash book), not a daily expense.
+    await local().repo.create('CapitalEntry', userId, newId(), {
+      date: v.form.purchaseDate ?? farmToday(), type: 'ANIMAL_PURCHASE', amountPaisa: v.form.purchasePricePaisa,
+      description: `#${v.form.tag.trim()}`, method: 'CASH', animalId: id, receiptPhotoId: null,
+    });
+  }
   return { id };
 }
 

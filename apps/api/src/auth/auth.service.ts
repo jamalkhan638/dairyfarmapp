@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { createHash, randomBytes, randomUUID } from 'crypto';
-import type { LoginResponse, MeResponse } from '@dairy/shared';
+import { FARM_SETTINGS_ID, farmToday, type LoginResponse, type MeResponse } from '@dairy/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { config } from '../config';
 import type { AuthUser } from '../common/auth-user';
@@ -39,6 +39,8 @@ export class AuthService {
       });
       await this.audit.record(tx, { entity: 'User', recordId: id, action: 'CREATE', userId: id, changes: { name: { from: null, to: input.name }, username: { from: null, to: input.username }, role: { from: null, to: 'OWNER' } } });
       await SyncFeed.add(tx, 'User', id);
+      await tx.farmSettings.create({ data: { id: FARM_SETTINGS_ID, createdById: id, updatedById: id, openingCashDate: farmToday() } });
+      await SyncFeed.add(tx, 'FarmSettings', FARM_SETTINGS_ID);
     });
     return this.issueTokens(id, input.deviceName);
   }

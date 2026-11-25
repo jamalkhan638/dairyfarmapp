@@ -9,7 +9,7 @@ import { createLinkedPayment, notInFuture, refuseManagedPayment, syncLinkedPayme
 import type { Tx } from '../prisma/prisma.service';
 import { EntityRegistry } from '../sync/entity-registry';
 
-const SUPPLIER_PAYMENT_FIELDS = ['supplierId', 'date', 'amountPaisa', 'method', 'purchaseId', 'note'];
+export const SUPPLIER_PAYMENT_FIELDS = ['supplierId', 'date', 'amountPaisa', 'method', 'purchaseId', 'expenseId', 'note'];
 const CASH_PURCHASE: LinkedPaymentSpec = {
   entity: 'SupplierPayment',
   delegate: (tx) => tx.supplierPayment,
@@ -18,7 +18,7 @@ const CASH_PURCHASE: LinkedPaymentSpec = {
   amountField: 'totalPaisa',
   auditFields: SUPPLIER_PAYMENT_FIELDS,
 };
-const managed = refuseManagedPayment('purchaseId', 'purchase');
+const managed = refuseManagedPayment({ purchaseId: 'cash purchase', expenseId: 'paid expense' });
 const today = () => farmToday();
 
 async function requireLive(tx: Tx, model: 'supplier' | 'feedItem' | 'animal', id: string, label: string) {
@@ -34,7 +34,7 @@ export class FeedModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'Supplier',
       moduleFor: () => 'feed',
-      alsoVisibleTo: ['expenses'],
+      alsoVisibleTo: ['expenses', 'finance'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.supplier,
       createSchema: supplierCreate,
@@ -44,8 +44,9 @@ export class FeedModule implements OnModuleInit {
       duplicateKeyFields: ['name'],
       findDuplicate: (tx, v, selfId) => tx.supplier.findFirst({ where: { name: { equals: v.name, mode: 'insensitive' }, deletedAt: null, id: { not: selfId } } }),
       beforeDelete: async (ctx, s) => {
-        const used = (await ctx.tx.feedPurchase.count({ where: { supplierId: s.id, deletedAt: null } })) + (await ctx.tx.supplierPayment.count({ where: { supplierId: s.id, deletedAt: null } }));
-        if (used) throw new RejectError('in_use', 'This supplier has purchases or payments. Mark the supplier inactive instead.');
+        const where = { supplierId: s.id, deletedAt: null };
+        const used = (await ctx.tx.feedPurchase.count({ where })) + (await ctx.tx.supplierPayment.count({ where })) + (await ctx.tx.expense.count({ where }));
+        if (used) throw new RejectError('in_use', 'This supplier has purchases, expenses or payments. Mark the supplier inactive instead.');
       },
     });
 
@@ -70,6 +71,7 @@ export class FeedModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'FeedPurchase',
       moduleFor: () => 'feed',
+      alsoVisibleTo: ['finance', 'reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.feedPurchase,
       createSchema: feedPurchaseCreate,
@@ -100,7 +102,7 @@ export class FeedModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'SupplierPayment',
       moduleFor: () => 'feed',
-      alsoVisibleTo: ['expenses'],
+      alsoVisibleTo: ['expenses', 'finance', 'reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.supplierPayment,
       createSchema: supplierPaymentCreate,
@@ -118,6 +120,7 @@ export class FeedModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'FeedConsumption',
       moduleFor: () => 'feed',
+      alsoVisibleTo: ['reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.feedConsumption,
       createSchema: feedConsumptionCreate,

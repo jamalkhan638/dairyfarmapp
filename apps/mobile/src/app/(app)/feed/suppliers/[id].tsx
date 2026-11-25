@@ -22,8 +22,8 @@ export default function SupplierDetail() {
   if (!rec) return <Screen><Muted>—</Muted></Screen>;
   const P = data.purchases.map((p) => p.data);
   const Y = data.payments.map((p) => p.data);
-  const bal = supplierBalances(P, Y).get(id)?.balancePaisa ?? 0;
-  const lines = supplierLedger(id, P, Y).reverse();
+  const bal = supplierBalances(P, Y, data.expenses).get(id)?.balancePaisa ?? 0;
+  const lines = supplierLedger(id, P, Y, data.expenses).reverse();
   const item = (fid: string) => data.items.find((i) => i.id === fid)?.data.name ?? '';
   return (
     <Screen>
@@ -38,17 +38,26 @@ export default function SupplierDetail() {
       ) : null}
       <Section>{t('statement')}</Section>
       {lines.length === 0 ? <Muted>{t('noEntries')}</Muted> : null}
-      {lines.map((l) => (
-        <Card key={`${l.kind}${l.id}`} onPress={() => router.push(l.kind === 'purchase' ? { pathname: '/feed/purchase', params: { id: l.id } } : { pathname: '/feed/supplier-payment', params: { id: l.id } })}>
-          <Row style={{ justifyContent: 'space-between' }}>
-            <Body style={{ fontWeight: '700', flexShrink: 1 }}>
-              {formatDate(l.date)} · {l.kind === 'purchase' ? `${item(l.purchase.feedItemId)} ${kg(l.purchase.quantityGrams)} ${t('kgUnit')}` : `${t('payment')} · ${t(`pm_${l.payment.method}`)}`}
-            </Body>
-            <Body style={{ fontWeight: '800' }}>{l.kind === 'purchase' ? `+${formatPKR(l.purchase.totalPaisa)}` : `−${formatPKR(l.payment.amountPaisa)}`}</Body>
-          </Row>
-          <Muted>{t('balance')}: {formatPKR(l.balanceAfter)}</Muted>
-        </Card>
-      ))}
+      {lines.map((l) => {
+        const go = () =>
+          l.kind === 'purchase' ? router.push({ pathname: '/feed/purchase', params: { id: l.id } })
+          : l.kind === 'expense' ? router.push({ pathname: '/money/expense', params: { id: l.id } })
+          : router.push({ pathname: '/feed/supplier-payment', params: { id: l.id } });
+        const label =
+          l.kind === 'purchase' ? `${item(l.purchase.feedItemId)} ${kg(l.purchase.quantityGrams)} ${t('kgUnit')}`
+          : l.kind === 'expense' ? `${t('expense')} · ${t(`ec_${l.expense.category}`)}`
+          : `${t('payment')} · ${t(`pm_${l.payment.method}`)}`;
+        const amount = l.kind === 'purchase' ? `+${formatPKR(l.purchase.totalPaisa)}` : l.kind === 'expense' ? `+${formatPKR(l.expense.amountPaisa)}` : `−${formatPKR(l.payment.amountPaisa)}`;
+        return (
+          <Card key={`${l.kind}${l.id}`} onPress={go}>
+            <Row style={{ justifyContent: 'space-between' }}>
+              <Body style={{ fontWeight: '700', flexShrink: 1 }}>{formatDate(l.date)} · {label}</Body>
+              <Body style={{ fontWeight: '800' }}>{amount}</Body>
+            </Row>
+            <Muted>{t('balance')}: {formatPKR(l.balanceAfter)}</Muted>
+          </Card>
+        );
+      })}
       <Section>{t('history')}</Section>
       <RecordMeta data={rec.data as any} syncState={rec.syncState} />
       {can('feed', 'edit') ? <Button title={t('editSupplier')} variant="secondary" onPress={() => router.push({ pathname: '/feed/supplier', params: { id } })} /> : null}

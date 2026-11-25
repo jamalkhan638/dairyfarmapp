@@ -504,6 +504,8 @@ model SupplierPayment {
   method      PaymentMethod
   /// Set when created automatically for a cash purchase.
   purchaseId  String?       @db.Uuid
+  /// Set when created automatically for an expense paid now to a supplier.
+  expenseId   String?       @db.Uuid
   note        String?
 
   version         Int       @default(1)
@@ -562,4 +564,94 @@ model StockAdjustment {
   deletedById     String?   @db.Uuid
 
   @@index([feedItemId])
+}
+
+// ---------- Expenses, capital, settings ----------
+
+enum ExpenseCategory {
+  VET
+  MEDICINE
+  LABOUR
+  ELECTRICITY
+  TRANSPORT
+  REPAIRS
+  OTHER
+}
+
+enum CapitalType {
+  ANIMAL_PURCHASE
+  EQUIPMENT
+  OWNER_INVESTMENT
+  OWNER_WITHDRAWAL
+  ANIMAL_SALE
+}
+
+/// Daily running cost. Counts towards operating profit.
+model Expense {
+  id             String          @id @db.Uuid
+  date           String
+  category       ExpenseCategory
+  amountPaisa    Int
+  description    String?
+  supplierId     String?         @db.Uuid
+  paymentType    SaleType        @default(CASH)
+  method         PaymentMethod   @default(CASH)
+  cashPaymentId  String?         @db.Uuid
+  animalId       String?         @db.Uuid
+  receiptPhotoId String?         @db.Uuid
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([date])
+  @@index([supplierId])
+}
+
+/// Cow purchases/sales, equipment, owner money in/out. Never part of operating profit.
+model CapitalEntry {
+  id             String        @id @db.Uuid
+  date           String
+  type           CapitalType
+  amountPaisa    BigInt
+  description    String?
+  method         PaymentMethod @default(CASH)
+  animalId       String?       @db.Uuid
+  receiptPhotoId String?       @db.Uuid
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([date])
+}
+
+/// One record (fixed id): farm-wide settings such as the opening cash balance.
+model FarmSettings {
+  id               String  @id @db.Uuid
+  farmName         String?
+  openingCashPaisa BigInt  @default(0)
+  openingCashDate  String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
 }

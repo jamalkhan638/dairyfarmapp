@@ -54,9 +54,19 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - Each animal has a Feed tab (last 30 days). Shared feeding is split equally and marked **Estimate**
 - New users get full access to every section by default (the owner can still untick things)
 
+**Phase 5 – Expenses, capital & cash book: done**
+- Operating expenses: vet, medicines, labour, electricity, transport, repairs, other, with an optional receipt photo, description and animal
+- Paid now (cash/bank/JazzCash-Easypaisa) or on credit to a supplier. Credit adds to what you owe them, alongside feed purchases
+- An expense paid now to a supplier also records the payment automatically, so the supplier's balance stays right
+- Capital entries, kept apart from daily expenses: cow bought, equipment, owner money in, owner money out, animal sold
+- Adding a cow with a purchase price offers to put that payment in the cash book as "cow bought"
+- Cash book: opening balance (set once) + money in − money out, per month with a running balance. Nothing is counted twice and credit is not cash
+- Money screen: cash in hand, this month's money in/out, this month's operating expenses by category
+- The cash balance is labelled as not being profit (operating profit comes in Phase 7)
+
 Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
 
-Next phases: Expenses & capital → Health & breeding → Reports → Release & backups.
+Next phases: Health & breeding → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
 
@@ -94,7 +104,7 @@ Automated (needs a `dairy_test` database: `createdb dairy_test`):
 ```bash
 npm test
 ```
-63 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
+73 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
 
 By hand on a phone:
 1. **Owner + worker.** As owner: Settings → Users → Add user. Give the worker Animals: See + Add + Edit, but not Delete. Log in as the worker on a second phone.
@@ -140,6 +150,16 @@ By hand on a phone:
 7. **Record feeding**: Green fodder, One animal, 30 kg. It's shown as "fed with no purchase price yet". Then buy green fodder (by kg) and the cost appears.
 8. **Stock count**: Wanda, counted 175 kg. A −4 kg correction is saved and stock shows 175 kg.
 9. Offline: on two phones, one buys feed and the other records feeding and a supplier payment. After syncing, stock and supplier balance match on both.
+
+## Verify Phase 5 (Money)
+
+1. **Money → Opening balance**: Rs 50,000 from the 1st of this month.
+2. **Add expense**: Vet, Rs 1,500, paid now in cash, for cow #1. Take a receipt photo. It appears under this month's operating expenses, and cash in hand becomes Rs 48,500.
+3. **Add expense**: Medicines, Rs 800, on credit from a supplier. Operating expenses go up by Rs 800, cash doesn't change, and the supplier's statement shows "+Rs 800".
+4. **Add capital entry**: Equipment, chaff cutter, Rs 45,000. Cash drops by Rs 45,000, but operating expenses don't change.
+5. **Animals → Add animal** with purchase price Rs 250,000 and "Also add … to the cash book" ticked. The cash book shows "Cow / animal bought −Rs 250,000".
+6. **Cash book**: the month shows balance at start, money in (customer payments), money out (expenses, supplier payments, cash feed, capital) and balance at end. Tapping a line opens that record.
+7. Offline: add an expense on one phone and a capital entry on another, then sync both. Cash in hand is the same on both phones.
 
 ## How sync works (short)
 

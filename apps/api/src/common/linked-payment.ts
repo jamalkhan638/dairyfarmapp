@@ -29,7 +29,7 @@ export async function createLinkedPayment(ctx: EntityContext, spec: LinkedPaymen
       [spec.partyField]: parent[spec.partyField],
       date: parent.date,
       amountPaisa: parent[spec.amountField],
-      method: 'CASH',
+      method: parent.method ?? 'CASH',
       [spec.linkField]: parent.id,
       createdById: ctx.user.id,
       updatedById: ctx.user.id,
@@ -55,24 +55,28 @@ export async function syncLinkedPayment(ctx: EntityContext, spec: LinkedPaymentS
     await ctx.audit(spec.entity, p.id, 'DELETE', { deletedAt: { from: null, to: u.deletedAt.toISOString() } });
   } else {
     const amount = parent[spec.amountField];
-    if (p.amountPaisa === amount && p.date === parent.date) return;
+    const method = parent.method ?? p.method;
+    if (p.amountPaisa === amount && p.date === parent.date && p.method === method) return;
     const u = await d.update({
       where: { id: p.id },
-      data: { amountPaisa: amount, date: parent.date, updatedById: ctx.user.id, version: { increment: 1 }, clientUpdatedAt: now },
+      data: { amountPaisa: amount, date: parent.date, method, updatedById: ctx.user.id, version: { increment: 1 }, clientUpdatedAt: now },
     });
-    await ctx.audit(spec.entity, p.id, 'UPDATE', diff(p, u, ['amountPaisa', 'date']));
+    await ctx.audit(spec.entity, p.id, 'UPDATE', diff(p, u, ['amountPaisa', 'date', 'method']));
   }
   await ctx.feed(spec.entity, p.id);
 }
 
 /** The linked payment can't be changed on its own: change its sale/purchase instead. */
-export function refuseManagedPayment(linkField: string, what: string) {
+export function refuseManagedPayment(links: Record<string, string>) {
+  const owner = (r: Row | null) => Object.entries(links).find(([field]) => r?.[field])?.[1];
   return {
     validate(existing: Row | null) {
-      if (existing?.[linkField]) throw new RejectError('managed', `This payment belongs to a cash ${what}. Change the ${what} instead.`);
+      const what = owner(existing);
+      if (what) throw new RejectError('managed', `This payment belongs to a ${what}. Change the ${what} instead.`);
     },
     beforeDelete(record: Row) {
-      if (record[linkField]) throw new RejectError('managed', `This payment belongs to a cash ${what}. Delete the ${what} instead.`);
+      const what = owner(record);
+      if (what) throw new RejectError('managed', `This payment belongs to a ${what}. Delete the ${what} instead.`);
     },
   };
 }

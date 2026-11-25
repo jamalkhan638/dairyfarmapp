@@ -7,7 +7,9 @@ export interface FeedPurchase {
   id: string; feedItemId: string; supplierId: string | null; date: string; quantityGrams: number; bags: number | null;
   totalPaisa: number; costPerKgPaisa: number; paymentType: SaleType; cashPaymentId: string | null; note: string | null; deletedAt: string | null;
 }
-export interface SupplierPayment { id: string; supplierId: string; date: string; amountPaisa: number; method: PaymentMethod; purchaseId: string | null; note: string | null; deletedAt: string | null }
+export interface SupplierPayment { id: string; supplierId: string; date: string; amountPaisa: number; method: PaymentMethod; purchaseId: string | null; expenseId?: string | null; note: string | null; deletedAt: string | null }
+/** Minimal shape of an expense, for supplier balances (full type in finance.ts). */
+export interface SupplierExpense { id: string; supplierId: string | null; date: string; amountPaisa: number; category: string; cashPaymentId: string | null; deletedAt: string | null }
 export interface FeedConsumption { id: string; feedItemId: string; date: string; quantityGrams: number; wastedGrams: number; animalIds: string[]; note: string | null; createdById: string; deletedAt: string | null }
 export interface StockAdjustment { id: string; feedItemId: string; date: string; changeGrams: number; reason: string | null; deletedAt: string | null }
 
@@ -125,7 +127,7 @@ export interface SupplierBalance { supplierId: string; purchasedPaisa: number; p
  * What the farm owes each supplier: purchases − payments. A cash purchase saved on
  * this phone but not synced yet has no payment record here, so it counts as paid.
  */
-export function supplierBalances(purchases: FeedPurchase[], payments: SupplierPayment[]): Map<string, SupplierBalance> {
+export function supplierBalances(purchases: FeedPurchase[], payments: SupplierPayment[], expenses: SupplierExpense[] = []): Map<string, SupplierBalance> {
   const m = new Map<string, SupplierBalance>();
   const get = (id: string) => {
     if (!m.has(id)) m.set(id, { supplierId: id, purchasedPaisa: 0, paidPaisa: 0, balancePaisa: 0 });
@@ -137,6 +139,11 @@ export function supplierBalances(purchases: FeedPurchase[], payments: SupplierPa
     get(p.supplierId).purchasedPaisa += p.totalPaisa;
     if (p.cashPaymentId && !payIds.has(p.cashPaymentId)) get(p.supplierId).paidPaisa += p.totalPaisa;
   }
+  for (const e of live(expenses)) {
+    if (!e.supplierId) continue;
+    get(e.supplierId).purchasedPaisa += e.amountPaisa;
+    if (e.cashPaymentId && !payIds.has(e.cashPaymentId)) get(e.supplierId).paidPaisa += e.amountPaisa;
+  }
   for (const p of live(payments)) get(p.supplierId).paidPaisa += p.amountPaisa;
   for (const b of m.values()) b.balancePaisa = b.purchasedPaisa - b.paidPaisa;
   return m;
@@ -144,12 +151,20 @@ export function supplierBalances(purchases: FeedPurchase[], payments: SupplierPa
 
 export type SupplierLine =
   | { kind: 'purchase'; date: string; id: string; purchase: FeedPurchase; balanceAfter: number }
+  | { kind: 'expense'; date: string; id: string; expense: SupplierExpense; balanceAfter: number }
   | { kind: 'payment'; date: string; id: string; payment: SupplierPayment; balanceAfter: number };
 
 /** Supplier statement with running balance (what the farm owes after each line). */
-export function supplierLedger(supplierId: string, purchases: FeedPurchase[], payments: SupplierPayment[]): SupplierLine[] {
+export function supplierLedger(supplierId: string, purchases: FeedPurchase[], payments: SupplierPayment[], expenses: SupplierExpense[] = []): SupplierLine[] {
   const payIds = new Set(payments.map((p) => p.id));
-  const lines: { kind: 'purchase' | 'payment'; date: string; id: string; amount: number; purchase?: FeedPurchase; payment?: SupplierPayment }[] = [];
+  const lines: { kind: 'purchase' | 'expense' | 'payment'; date: string; id: string; amount: number; purchase?: FeedPurchase; expense?: SupplierExpense; payment?: SupplierPayment }[] = [];
+  for (const e of live(expenses)) {
+    if (e.supplierId !== supplierId) continue;
+    lines.push({ kind: 'expense', date: e.date, id: e.id, amount: e.amountPaisa, expense: e });
+    if (e.cashPaymentId && !payIds.has(e.cashPaymentId)) {
+      lines.push({ kind: 'payment', date: e.date, id: e.cashPaymentId, amount: -e.amountPaisa, payment: { id: e.cashPaymentId, supplierId, date: e.date, amountPaisa: e.amountPaisa, method: 'CASH', purchaseId: null, expenseId: e.id, note: null, deletedAt: null } });
+    }
+  }
   for (const p of live(purchases)) {
     if (p.supplierId !== supplierId) continue;
     lines.push({ kind: 'purchase', date: p.date, id: p.id, amount: p.totalPaisa, purchase: p });
@@ -158,13 +173,14 @@ export function supplierLedger(supplierId: string, purchases: FeedPurchase[], pa
     }
   }
   for (const p of live(payments)) if (p.supplierId === supplierId) lines.push({ kind: 'payment', date: p.date, id: p.id, amount: -p.amountPaisa, payment: p });
-  lines.sort((a, b) => (a.date === b.date ? (a.kind === b.kind ? 0 : a.kind === 'purchase' ? -1 : 1) : a.date.localeCompare(b.date)));
+  const rank = (k: string) => (k === 'payment' ? 1 : 0);
+  lines.sort((a, b) => (a.date === b.date ? rank(a.kind) - rank(b.kind) : a.date.localeCompare(b.date)));
   let bal = 0;
   return lines.map((l) => {
     bal += l.amount;
-    return l.kind === 'purchase'
-      ? { kind: 'purchase', date: l.date, id: l.id, purchase: l.purchase!, balanceAfter: bal }
-      : { kind: 'payment', date: l.date, id: l.id, payment: l.payment!, balanceAfter: bal };
+    if (l.kind === 'purchase') return { kind: 'purchase', date: l.date, id: l.id, purchase: l.purchase!, balanceAfter: bal };
+    if (l.kind === 'expense') return { kind: 'expense', date: l.date, id: l.id, expense: l.expense!, balanceAfter: bal };
+    return { kind: 'payment', date: l.date, id: l.id, payment: l.payment!, balanceAfter: bal };
   });
 }
 

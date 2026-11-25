@@ -41,9 +41,9 @@ export default function SupplierPaymentForm() {
   }, [rec, filled]);
   if (!can('feed', params.id ? 'view' : 'add')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   if (!data) return <Screen>{null}</Screen>;
-  const linked = !!rec?.data.purchaseId;
+  const linked = !!rec?.data.purchaseId || !!rec?.data.expenseId;
   const readOnly = linked || (!!params.id && !can('feed', 'edit'));
-  const bal = supplierId ? supplierBalances(data.purchases.map((p) => p.data), data.payments.map((p) => p.data)).get(supplierId)?.balancePaisa ?? 0 : null;
+  const bal = supplierId ? supplierBalances(data.purchases.map((p) => p.data), data.payments.map((p) => p.data), data.expenses).get(supplierId)?.balancePaisa ?? 0 : null;
 
   const save = async () => {
     const p = parseRupees(amount);

@@ -20,7 +20,7 @@ export default function FeedHome() {
   const stock = stockByItem(P, data.consumptions.map((x) => x.data), data.adjustments.map((x) => x.data));
   const { from, to } = monthRange(today().slice(0, 7));
   const exp = feedExpense(data.consumptions.map((x) => x.data), P, from, to);
-  const owed = [...supplierBalances(P, data.payments.map((x) => x.data)).values()].reduce((s, b) => s + Math.max(0, b.balancePaisa), 0);
+  const owed = [...supplierBalances(P, data.payments.map((x) => x.data), data.expenses).values()].reduce((s, b) => s + Math.max(0, b.balancePaisa), 0);
 
   return (
     <Screen>
