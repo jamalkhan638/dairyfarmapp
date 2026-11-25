@@ -63,8 +63,10 @@ export default function Home() {
 
   return (
     <Screen>
+      {d.settings?.farmName ? (
+        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.primaryDark, textAlign: 'left' }}>🐄 {d.settings.farmName}</Text>
+      ) : null}
       <Title>{t('hello', { name: me?.name ?? '' })}</Title>
-      {d.settings?.farmName ? <Muted>{d.settings.farmName}</Muted> : null}
 
       {can('milk', 'view') ? (
         <Card onPress={go('/milk')}>
