@@ -15,6 +15,7 @@ export class MilkModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'MilkRecord',
       moduleFor: () => 'milk',
+      alsoVisibleTo: ['reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.milkRecord,
       createSchema: milkRecordCreate,
@@ -35,6 +36,7 @@ export class MilkModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'MilkUsage',
       moduleFor: () => 'milk',
+      alsoVisibleTo: ['reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.milkUsage,
       createSchema: milkUsageCreate,

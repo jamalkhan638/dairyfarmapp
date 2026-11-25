@@ -58,6 +58,7 @@ export default function AppLayout() {
         <Stack.Screen name="health/event" options={{ title: t('addHealth') }} />
         <Stack.Screen name="health/breeding" options={{ title: t('addBreeding') }} />
         <Stack.Screen name="health/reminder" options={{ title: t('addReminder') }} />
+        <Stack.Screen name="reports/index" options={{ title: t('reports') }} />
         <Stack.Screen name="sync" options={{ title: t('syncDetails') }} />
         <Stack.Screen name="conflict/[id]" options={{ title: t('conflict') }} />
         <Stack.Screen name="history/[entity]/[id]" options={{ title: t('history') }} />

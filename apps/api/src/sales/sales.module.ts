@@ -37,6 +37,7 @@ export class SalesModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'Customer',
       moduleFor: () => 'sales',
+      alsoVisibleTo: ['reports', 'finance'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.customer,
       createSchema: customerCreate,
@@ -54,6 +55,7 @@ export class SalesModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'CustomerRate',
       moduleFor: () => 'sales',
+      alsoVisibleTo: ['reports'],
       actions: { create: 'edit', update: 'edit', delete: 'edit' },
       delegate: (tx) => tx.customerRate,
       createSchema: customerRateCreate,

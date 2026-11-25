@@ -34,7 +34,7 @@ export class FeedModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'Supplier',
       moduleFor: () => 'feed',
-      alsoVisibleTo: ['expenses', 'finance'],
+      alsoVisibleTo: ['expenses', 'finance', 'reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.supplier,
       createSchema: supplierCreate,
@@ -53,6 +53,7 @@ export class FeedModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'FeedItem',
       moduleFor: () => 'feed',
+      alsoVisibleTo: ['reports', 'finance'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.feedItem,
       createSchema: feedItemCreate,
@@ -142,6 +143,7 @@ export class FeedModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'StockAdjustment',
       moduleFor: () => 'feed',
+      alsoVisibleTo: ['reports'],
       actions: { create: 'edit', update: 'edit', delete: 'edit' },
       delegate: (tx) => tx.stockAdjustment,
       createSchema: stockAdjustmentCreate,

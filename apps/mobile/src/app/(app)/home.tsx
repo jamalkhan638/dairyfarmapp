@@ -1,94 +1,134 @@
 import React from 'react';
-import { View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ANIMAL_STATUSES } from '@dairy/shared';
 import { useSession } from '../../lib/session';
 import { useLocalQuery } from '../../lib/hooks';
 import { local } from '../../lib/db';
-import { loadAnimals } from '../../domain/animals';
-import { litres, loadMilk, summarizeDay } from '../../domain/milk';
-import { formatPKR, today } from '../../lib/format';
-import { balances, loadSales } from '../../domain/sales';
+import { litres, summarizeDay } from '../../domain/milk';
 import { computeReminders, groupReminders, loadHealth } from '../../domain/health';
+import { loadReportData, monthReport } from '../../domain/reports';
+import { cashBook } from '../../domain/finance';
+import { formatPKR, today } from '../../lib/format';
 import { ReminderList } from '../../components/ReminderList';
-import { Body, Button, Card, Muted, Row, Screen, Section, Title } from '../../components/ui';
-import { colors } from '../../lib/theme';
+import { Badge, Body, Card, InfoLine, Muted, Row, Screen, Section, Title } from '../../components/ui';
+import { colors, font, space } from '../../lib/theme';
 
+function Tile({ label, onPress, primary }: { label: string; onPress: () => void; primary?: boolean }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        { flexBasis: '48%', flexGrow: 1, minHeight: 64, borderRadius: 12, padding: space(3), justifyContent: 'center', borderWidth: 1 },
+        primary ? { backgroundColor: colors.primary, borderColor: colors.primary } : { backgroundColor: colors.card, borderColor: colors.border },
+        pressed && { opacity: 0.8 },
+      ]}
+    >
+      <Text style={{ fontSize: font.body, fontWeight: '700', color: primary ? '#fff' : colors.primaryDark, textAlign: 'center' }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space(2) }}>{children}</View>;
+}
+
+/** Dashboard: today's milk, reminders, this month so far, money, and big buttons for daily work. */
 export default function Home() {
   const { t } = useTranslation();
   const router = useRouter();
   const { me, can } = useSession();
   const { data } = useLocalQuery(async () => {
     const repo = local().repo;
-    const animals = await loadAnimals(repo);
+    const d = await loadReportData(repo);
     const h = await loadHealth(repo);
-    const due = computeReminders(animals, { health: h.health.map((x) => x.data), breeding: h.breeding.map((x) => x.data), reminders: h.reminders.map((x) => x.data), settings: h.settings }, today());
-    return { animals, milk: await loadMilk(repo), sales: await loadSales(repo), due };
+    const due = computeReminders(d.animals, { health: h.health.map((x) => x.data), breeding: h.breeding.map((x) => x.data), reminders: h.reminders.map((x) => x.data), settings: h.settings }, today());
+    return { d, due };
   });
-  const reminders = data ? groupReminders(data.due, today()) : null;
-  const tagOf = (id: string) => data?.animals.find((a) => a.animal.id === id)?.animal.tag;
-  const owed = data ? [...balances(data.sales.deliveries.map((d) => d.data), data.sales.payments.map((p) => p.data)).values()].reduce((s, b) => s + Math.max(0, b.balancePaisa), 0) : 0;
-  const soldToday = data ? data.sales.deliveries.filter((d) => d.data.date === today()).reduce((s, d) => s + d.data.quantityMl, 0) : 0;
-  const animals = data?.animals;
-  const day = data ? summarizeDay(today(), data.animals, data.milk.records.map((r) => r.data), data.milk.usages.map((u) => u.data)) : null;
-  const counts = Object.fromEntries(ANIMAL_STATUSES.map((st) => [st, (animals ?? []).filter((a) => a.status === st).length]));
+  const go = (href: Href) => () => router.push(href);
+  if (!data) return <Screen>{null}</Screen>;
+  const { d, due } = data;
+  const day = summarizeDay(today(), d.animals, d.milkRecords, d.milkUsages, d.deliveries.filter((x) => !x.deletedAt && x.date === today()).reduce((s, x) => s + x.quantityMl, 0));
+  const month = monthReport(d, today().slice(0, 7));
+  const reminders = groupReminders(due, today());
+  const tagOf = (id: string) => d.animals.find((a) => a.animal.id === id)?.animal.tag;
+  const payIds = new Set(d.customerPayments.map((p) => p.id));
+  const cashSalesNotSynced = d.deliveries
+    .filter((x) => !x.deletedAt && x.saleType === 'CASH' && x.cashPaymentId && !payIds.has(x.cashPaymentId))
+    .map((x) => ({ id: x.cashPaymentId!, customerId: x.customerId, date: x.date, amountPaisa: x.amountPaisa }));
+  const cash = cashBook({ ...d }, { cashSalesNotSynced }).balance;
+  const urgent = [...reminders.overdue, ...reminders.today];
 
   return (
     <Screen>
       <Title>{t('hello', { name: me?.name ?? '' })}</Title>
-      {can('health', 'view') && reminders && reminders.overdue.length + reminders.today.length > 0 ? (
+      {d.settings?.farmName ? <Muted>{d.settings.farmName}</Muted> : null}
+
+      {can('health', 'view') && urgent.length ? (
         <>
-          <Section>{t('remindersDue', { count: reminders.overdue.length + reminders.today.length })}</Section>
-          <ReminderList list={[...reminders.overdue, ...reminders.today].slice(0, 5)} tagOf={tagOf} tone="warn" />
+          <Section>{t('remindersDue', { count: urgent.length })}</Section>
+          <ReminderList list={urgent.slice(0, 4)} tagOf={tagOf} tone={reminders.overdue.length ? 'bad' : 'warn'} />
+          {urgent.length > 4 ? <Tile label={t('reminders')} onPress={go('/health')} /> : null}
         </>
       ) : null}
-      {can('animals', 'view') ? (
-        <Card onPress={() => router.push('/animals')}>
-          <Section>{t('herd')}</Section>
-          <Row style={{ flexWrap: 'wrap', gap: 16 }}>
-            {(['MILKING', 'DRY', 'YOUNG'] as const).map((st) => (
-              <View key={st} style={{ minWidth: 90 }}>
-                <Body style={{ fontSize: 28, fontWeight: '800', color: colors.primaryDark }}>{counts[st]}</Body>
-                <Muted>{t(`s_${st}`)}</Muted>
-              </View>
-            ))}
+
+      {can('milk', 'view') ? (
+        <Card onPress={go('/milk')}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Section>{t('todayMilk')}</Section>
+            <Badge text={t('recordedOf', { recorded: day.recorded, expected: day.expected })} tone={day.complete ? 'good' : 'warn'} />
           </Row>
+          <Body style={{ fontSize: 30, fontWeight: '800', color: colors.primaryDark }}>{litres(day.producedMl)} {t('L')}</Body>
+          <Muted>{t('morning')} {litres(day.morningMl)} · {t('evening')} {litres(day.eveningMl)}{can('sales', 'view') ? ` · ${t('sold')} ${litres(day.soldMl)}` : ''}</Muted>
         </Card>
       ) : null}
-      {can('milk', 'view') && day ? (
-        <Card onPress={() => router.push('/milk')}>
-          <Section>{t('todayMilk')}</Section>
-          <Body style={{ fontSize: 28, fontWeight: '800', color: colors.primaryDark }}>{litres(day.producedMl)} {t('L')}</Body>
-          <Muted>{t('morning')} {litres(day.morningMl)} · {t('evening')} {litres(day.eveningMl)}</Muted>
-          <Muted>{t('recordedOf', { recorded: day.recorded, expected: day.expected })}</Muted>
+
+      <Section>{t('quickActions')}</Section>
+      <Grid>
+        {can('milk', 'add') ? <Tile primary label={`${t('recordMilk')}: ${t('morning')}`} onPress={go({ pathname: '/milk/entry', params: { date: today(), session: 'MORNING' } })} /> : null}
+        {can('milk', 'add') ? <Tile primary label={`${t('recordMilk')}: ${t('evening')}`} onPress={go({ pathname: '/milk/entry', params: { date: today(), session: 'EVENING' } })} /> : null}
+        {can('sales', 'add') ? <Tile label={t('deliveryRound')} onPress={go({ pathname: '/sales/round', params: { date: today(), session: 'MORNING' } })} /> : null}
+        {can('sales', 'add') ? <Tile label={t('receivePayment')} onPress={go('/sales/payment')} /> : null}
+        {can('feed', 'add') ? <Tile label={t('recordFeeding')} onPress={go('/feed/feeding')} /> : null}
+        {can('feed', 'add') ? <Tile label={t('addPurchase')} onPress={go('/feed/purchase')} /> : null}
+        {can('expenses', 'add') ? <Tile label={t('addExpense')} onPress={go('/money/expense')} /> : null}
+        {can('health', 'add') ? <Tile label={t('addHealth')} onPress={go('/health/event')} /> : null}
+      </Grid>
+
+      {can('reports', 'view') ? (
+        <Card onPress={go('/reports')}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Section>{t('thisMonthSoFar')}</Section>
+            <Badge text={t('estimateLabel')} tone="warn" />
+          </Row>
+          <InfoLine label={t('operatingProfit')} value={formatPKR(month.operatingProfitPaisa)} />
+          <InfoLine label={t('milkSales')} value={formatPKR(month.sales.revenuePaisa)} />
+          <InfoLine label={t('feedUsed')} value={formatPKR(month.feed.costPaisa)} />
+          <InfoLine label={t('otherExpenses')} value={formatPKR(month.expenses.totalPaisa)} />
+          {month.warnings.some((w) => w !== 'IN_PROGRESS' && w !== 'NO_OPENING_CASH') ? <Badge text={t('incomplete')} tone="warn" /> : null}
         </Card>
       ) : null}
-      {can('milk', 'add') ? (
-        <Row>
-          <Button title={t('morning')} onPress={() => router.push({ pathname: '/milk/entry', params: { date: today(), session: 'MORNING' } })} style={{ flex: 1 }} />
-          <Button title={t('evening')} onPress={() => router.push({ pathname: '/milk/entry', params: { date: today(), session: 'EVENING' } })} style={{ flex: 1 }} />
-        </Row>
-      ) : null}
-      {can('milk', 'view') ? <Button title={t('milk')} variant="secondary" onPress={() => router.push('/milk')} /> : null}
-      {can('sales', 'view') && data ? (
-        <Card onPress={() => router.push('/sales')}>
-          <Section>{t('sales')}</Section>
-          <Muted>{t('soldTo')}: {litres(soldToday)} {t('L')}</Muted>
-          <Body style={{ fontWeight: '700' }}>{t('totalOwed')}: {formatPKR(owed)}</Body>
+
+      {can('finance', 'view') || can('sales', 'view') || can('feed', 'view') ? (
+        <Card>
+          {can('finance', 'view') ? <InfoLine label={t('cashInHand')} value={formatPKR(cash)} /> : null}
+          {can('sales', 'view') ? <InfoLine label={t('totalOwed')} value={formatPKR(month.sales.customersOweAtEndPaisa)} /> : null}
+          {can('feed', 'view') ? <InfoLine label={t('supplierTotalOwed')} value={formatPKR(month.suppliersOwedAtEndPaisa)} /> : null}
         </Card>
       ) : null}
-      {can('sales', 'add') ? <Button title={t('deliveryRound')} onPress={() => router.push({ pathname: '/sales/round', params: { date: today(), session: 'MORNING' } })} /> : null}
-      {can('sales', 'view') ? <Button title={t('customers')} variant="secondary" onPress={() => router.push('/sales')} /> : null}
-      {can('feed', 'add') ? <Button title={t('recordFeeding')} onPress={() => router.push('/feed/feeding')} /> : null}
-      {can('feed', 'view') ? <Button title={t('feed')} variant="secondary" onPress={() => router.push('/feed')} /> : null}
-      {can('expenses', 'add') ? <Button title={t('addExpense')} onPress={() => router.push('/money/expense')} /> : null}
-      {can('expenses', 'view') || can('finance', 'view') ? <Button title={t('money')} variant="secondary" onPress={() => router.push('/money')} /> : null}
-      {can('health', 'view') ? <Button title={t('health')} variant="secondary" onPress={() => router.push('/health')} /> : null}
-      {can('animals', 'view') ? <Button title={t('animals')} onPress={() => router.push('/animals')} /> : null}
-      {can('animals', 'add') ? <Button title={t('addAnimal')} variant="secondary" onPress={() => router.push('/animals/new')} /> : null}
-      <Button title={t('settings')} variant="secondary" onPress={() => router.push('/settings')} />
-      <Muted>{t('comingSoon')}</Muted>
+
+      <Section>{t('sections')}</Section>
+      <Grid>
+        {can('animals', 'view') ? <Tile label={t('animals')} onPress={go('/animals')} /> : null}
+        {can('milk', 'view') ? <Tile label={t('milk')} onPress={go('/milk')} /> : null}
+        {can('sales', 'view') ? <Tile label={t('sales')} onPress={go('/sales')} /> : null}
+        {can('feed', 'view') ? <Tile label={t('feed')} onPress={go('/feed')} /> : null}
+        {can('expenses', 'view') || can('finance', 'view') ? <Tile label={t('money')} onPress={go('/money')} /> : null}
+        {can('health', 'view') ? <Tile label={t('health')} onPress={go('/health')} /> : null}
+        {can('reports', 'view') ? <Tile label={t('reports')} onPress={go('/reports')} /> : null}
+        <Tile label={t('settings')} onPress={go('/settings')} />
+      </Grid>
     </Screen>
   );
 }

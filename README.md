@@ -76,9 +76,24 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - Your own reminders (with an optional animal)
 - Local phone notifications at 8 am on due days (no internet or paid service needed)
 
+**Phase 7 – Dashboard & reports: done**
+- Home dashboard: reminders due, today's milk (recorded X of Y, sold), quick-action buttons, this month so far (operating profit estimate), cash in hand, what customers owe and what we owe suppliers, and buttons for every section
+- Monthly report (works offline, calculated on the phone):
+  - **Operating profit** = milk sales (delivered, paid or not) − feed used (fed + wasted, at average price) − other operating expenses. Labelled **Estimate**
+  - Feed purchases, animals, equipment and owner money are shown separately and never included
+  - Milk: produced, sold, fed to calves, home, discarded, not accounted for, and recording coverage
+  - Sales: revenue, average price per litre, payments received, customers owe / advances at month end
+  - Feed: cost used, kg fed and wasted, feed bought (as stock), what we owe suppliers at month end
+  - Expenses by category; capital entries listed separately
+  - Cash (start, in, out, end), separate from profit
+  - Warnings: month in progress, milk recording incomplete, days with no feeding recorded, feed with no price, opening cash not set
+- Per-animal tab: milk, estimated milk value, feed cost estimate (shared feed split equally)
+- 6-month trend of profit, milk, sales, feed and expenses
+- An automatic check that every text exists in both English and Urdu
+
 Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
 
-Next phases: Dashboard & reports → Health & breeding → Reports → Release & backups.
+Next phase: Release & backups (installable APK, backup/restore drill, deployment) → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
 
@@ -116,7 +131,7 @@ Automated (needs a `dairy_test` database: `createdb dairy_test`):
 ```bash
 npm test
 ```
-83 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
+90 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
 
 By hand on a phone:
 1. **Owner + worker.** As owner: Settings → Users → Add user. Give the worker Animals: See + Add + Edit, but not Delete. Log in as the worker on a second phone.
@@ -183,6 +198,17 @@ By hand on a phone:
 6. Vaccination "FMD" with next due date in 6 months. A reminder appears. Tap **Done** and it disappears on both phones after sync.
 7. **Calving**: add calf "21-C1", female, with "Mother starts milking" ticked. The calf appears in Animals as Calf/young with her mother linked, and the mother is Milking and no longer pregnant.
 8. Allow notifications when asked. On a due date you get a notification at 8 am listing that day's reminders.
+
+## Verify Phase 7 (Reports)
+
+1. **Home**: today's milk with "X of Y recorded", reminders due, and quick buttons. "This month so far" shows operating profit with an **Estimate** label.
+2. **Reports → Summary** for this month: "Month in progress" is shown. Profit = Milk sales − Feed used − Other expenses, and the three lines add up.
+3. Buy feed for Rs 18,000 and feed 21 kg. Feed bought shows Rs 18,000 "stock, not expense", while Feed used shows only the 21 kg's cost.
+4. Add an equipment capital entry. It appears under "Capital this month (not in profit)" and in Cash, and profit doesn't change.
+5. Skip one evening milking and one day of feeding. The report shows "Milk recording incomplete" and "Feed not recorded on 1 day(s)".
+6. **Per animal**: each cow's litres, estimated milk value and feed cost, with an **Estimate** badge for shared feed.
+7. **6 months**: one line per month. Tap one to open its summary.
+8. Switch to English/Urdu. Every report label is translated.
 
 ## How sync works (short)
 
