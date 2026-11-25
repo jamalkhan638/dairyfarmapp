@@ -642,6 +642,9 @@ model CapitalEntry {
 model FarmSettings {
   id               String  @id @db.Uuid
   farmName         String?
+  gestationDays    Int     @default(283)
+  pregnancyCheckDays Int   @default(60)
+  heatRepeatDays   Int     @default(21)
   openingCashPaisa BigInt  @default(0)
   openingCashDate  String?
 
@@ -654,4 +657,111 @@ model FarmSettings {
   clientUpdatedAt DateTime?
   deletedAt       DateTime?
   deletedById     String?   @db.Uuid
+}
+
+// ---------- Health & breeding ----------
+
+enum HealthType {
+  ILLNESS
+  TREATMENT
+  VACCINATION
+  DEWORMING
+  OTHER
+}
+
+enum BreedingType {
+  HEAT
+  INSEMINATION
+  PREGNANCY_CHECK
+  CALVING
+  ABORTION
+}
+
+enum InseminationMethod {
+  AI
+  NATURAL
+}
+
+enum PregnancyResult {
+  PREGNANT
+  NOT_PREGNANT
+}
+
+model HealthEvent {
+  id                String     @id @db.Uuid
+  animalId          String     @db.Uuid
+  date              String
+  type              HealthType
+  title             String
+  medicine          String?
+  dose              String?
+  vetName           String?
+  /// Milk must not be sold up to and including this date.
+  withdrawalEndDate String?
+  nextDueDate       String?
+  /// The cost lives in this expense (never stored twice).
+  expenseId         String?    @db.Uuid
+  notes             String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([animalId, date])
+}
+
+/// Heat, insemination, pregnancy check, calving, abortion. Pregnancy status is worked out from these.
+model BreedingEvent {
+  id         String              @id @db.Uuid
+  animalId   String              @db.Uuid
+  date       String
+  type       BreedingType
+  method     InseminationMethod?
+  sire       String?
+  technician String?
+  result     PregnancyResult?
+  calfId     String?             @db.Uuid
+  calfSex    Sex?
+  notes      String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([animalId, date])
+}
+
+/// A reminder added by a user, or a record that an automatic reminder was done (sourceKey).
+model Reminder {
+  id        String  @id @db.Uuid
+  animalId  String? @db.Uuid
+  dueDate   String
+  title     String
+  sourceKey String?
+  done      Boolean @default(false)
+  notes     String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([dueDate])
 }

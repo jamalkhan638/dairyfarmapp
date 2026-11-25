@@ -64,9 +64,21 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - Money screen: cash in hand, this month's money in/out, this month's operating expenses by category
 - The cash balance is labelled as not being profit (operating profit comes in Phase 7)
 
+**Phase 6 – Health, breeding & reminders: done**
+- Health records: illness, treatment, vaccination, deworming, other, with medicine, dose, vet, notes
+- Milk withdrawal end date from the vet. Cows under withdrawal are flagged on the milk entry screen, and the milk screen offers "Record as discarded" for their milk
+- Optional cost on a health record is saved once, as an expense for that animal (never counted twice)
+- Breeding: heat, insemination (AI/natural, semen/bull, who did it), pregnancy check, calving, abortion
+- Calving can add the calf as a new animal (linked to its mother) and set the mother to milking
+- Pregnancy status (not pregnant / inseminated / pregnant + expected calving), kept separate from milking status
+- Gestation, pregnancy-check and heat-repeat days are farm settings (cows ~283, buffaloes ~310 days)
+- Automatic reminders: heat re-check, pregnancy check, dry-off, calving due, next vaccination/deworming, withdrawal end. They clear themselves when the follow-up is recorded, and "Done" hides one on every phone
+- Your own reminders (with an optional animal)
+- Local phone notifications at 8 am on due days (no internet or paid service needed)
+
 Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
 
-Next phases: Health & breeding → Health & breeding → Reports → Release & backups.
+Next phases: Dashboard & reports → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
 
@@ -104,7 +116,7 @@ Automated (needs a `dairy_test` database: `createdb dairy_test`):
 ```bash
 npm test
 ```
-73 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
+83 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
 
 By hand on a phone:
 1. **Owner + worker.** As owner: Settings → Users → Add user. Give the worker Animals: See + Add + Edit, but not Delete. Log in as the worker on a second phone.
@@ -160,6 +172,17 @@ By hand on a phone:
 5. **Animals → Add animal** with purchase price Rs 250,000 and "Also add … to the cash book" ticked. The cash book shows "Cow / animal bought −Rs 250,000".
 6. **Cash book**: the month shows balance at start, money in (customer payments), money out (expenses, supplier payments, cash feed, capital) and balance at end. Tapping a line opens that record.
 7. Offline: add an expense on one phone and a capital entry on another, then sync both. Cash in hand is the same on both phones.
+
+## Verify Phase 6 (Health & breeding)
+
+1. Open a cow → **Health** tab → **Add breeding record**: Insemination, today, AI, semen "Sahiwal 123". Health & breeding shows reminders for a heat check in 21 days and a pregnancy check in 60 days, and the cow shows "Inseminated, awaiting check".
+2. **Add breeding record**: Pregnancy check, Pregnant (backdate the insemination to test). The pregnancy-check reminder disappears, the cow shows "Pregnant" with the expected calving date, and a dry-off reminder appears if she is milking.
+3. Settings → **Farm settings**: change pregnancy length to 310 (buffalo). The expected calving date moves.
+4. **Add health record**: Treatment "Mastitis", withdrawal ends in 3 days, cost Rs 1,200 (Medicines). Money → expenses shows one Rs 1,200 medicine expense for that cow.
+5. **Milk → Morning**: the cow shows "Milk withdrawal until …". After saving her milk, the milk screen offers **Record as discarded**.
+6. Vaccination "FMD" with next due date in 6 months. A reminder appears. Tap **Done** and it disappears on both phones after sync.
+7. **Calving**: add calf "21-C1", female, with "Mother starts milking" ticked. The calf appears in Animals as Calf/young with her mother linked, and the mother is Milking and no longer pregnant.
+8. Allow notifications when asked. On a due date you get a notification at 8 am listing that day's reminders.
 
 ## How sync works (short)
 

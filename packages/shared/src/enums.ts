@@ -43,3 +43,21 @@ export const CAPITAL_IN: CapitalType[] = ['OWNER_INVESTMENT', 'ANIMAL_SALE'];
 
 /** The farm settings record has one fixed id. */
 export const FARM_SETTINGS_ID = '00000000-0000-4000-8000-000000000001';
+
+export const HEALTH_TYPES = ['ILLNESS', 'TREATMENT', 'VACCINATION', 'DEWORMING', 'OTHER'] as const;
+export type HealthType = (typeof HEALTH_TYPES)[number];
+
+export const BREEDING_TYPES = ['HEAT', 'INSEMINATION', 'PREGNANCY_CHECK', 'CALVING', 'ABORTION'] as const;
+export type BreedingType = (typeof BREEDING_TYPES)[number];
+
+export const INSEMINATION_METHODS = ['AI', 'NATURAL'] as const;
+export type InseminationMethod = (typeof INSEMINATION_METHODS)[number];
+
+export const PREGNANCY_RESULTS = ['PREGNANT', 'NOT_PREGNANT'] as const;
+export type PregnancyResult = (typeof PREGNANCY_RESULTS)[number];
+
+/** Default breeding timings (days); the farm can change them in settings. */
+export const DEFAULT_GESTATION_DAYS = 283; // cows; buffaloes are about 310
+export const DEFAULT_PREGNANCY_CHECK_DAYS = 60;
+export const DEFAULT_HEAT_REPEAT_DAYS = 21;
+export const DRY_OFF_DAYS_BEFORE_CALVING = 60;

@@ -22,9 +22,21 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-image",
-      ["expo-localization", { "supportsRTL": true }],
+      [
+        "expo-localization",
+        {
+          "supportsRTL": true
+        }
+      ],
       "@react-native-community/datetimepicker",
-      ["expo-image-picker", { "photosPermission": "Allow Dairy Farm to use your photos for animal pictures and receipts.", "cameraPermission": "Allow Dairy Farm to use the camera for animal pictures and receipts." }]
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Dairy Farm to use your photos for animal pictures and receipts.",
+          "cameraPermission": "Allow Dairy Farm to use the camera for animal pictures and receipts."
+        }
+      ],
+      "expo-notifications"
     ],
     "extra": {
       "supportsRTL": true,

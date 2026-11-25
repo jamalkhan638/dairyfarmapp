@@ -262,7 +262,60 @@ export const capitalEntryUpdate = capitalEntryCreate.partial().omit({ type: true
 
 export const farmSettingsUpdate = z.object({
   farmName: optionalText(80),
+  gestationDays: z.number().int().min(200).max(400),
+  pregnancyCheckDays: z.number().int().min(20).max(150),
+  heatRepeatDays: z.number().int().min(15).max(30),
   /** Money in hand when you started using the app. */
   openingCashPaisa: z.number().int().min(-10_000_000_000).max(10_000_000_000),
   openingCashDate: isoDate.nullable(),
 }).partial();
+
+// ---------- Health, breeding, reminders ----------
+import { BREEDING_TYPES, HEALTH_TYPES, INSEMINATION_METHODS, PREGNANCY_RESULTS, SEXES as SEX_VALUES } from './enums';
+
+export const healthEventCreate = z.object({
+  animalId: uuid,
+  date: isoDate,
+  type: z.enum(HEALTH_TYPES),
+  /** Illness or what was given, e.g. "Mastitis" or "FMD vaccine". */
+  title: z.string().trim().min(1).max(120),
+  medicine: optionalText(200),
+  dose: optionalText(100),
+  vetName: optionalText(80),
+  /** Milk from this animal must not be sold up to and including this date (vet's instruction). */
+  withdrawalEndDate: isoDate.nullable().optional(),
+  /** When this should be done again (next vaccination/deworming, follow-up). */
+  nextDueDate: isoDate.nullable().optional(),
+  /** The expense that holds this visit's cost, if any (cost is only stored there). */
+  expenseId: uuid.nullable().optional(),
+  notes: optionalText(1000),
+});
+export const healthEventUpdate = healthEventCreate.omit({ animalId: true }).partial();
+
+export const breedingEventCreate = z.object({
+  animalId: uuid,
+  date: isoDate,
+  type: z.enum(BREEDING_TYPES),
+  method: z.enum(INSEMINATION_METHODS).nullable().optional(),
+  /** Semen straw / bull name. */
+  sire: optionalText(120),
+  technician: optionalText(80),
+  result: z.enum(PREGNANCY_RESULTS).nullable().optional(),
+  /** Calving: the calf, if it was added as an animal. */
+  calfId: uuid.nullable().optional(),
+  calfSex: z.enum(SEX_VALUES).nullable().optional(),
+  notes: optionalText(1000),
+});
+export const breedingEventUpdate = breedingEventCreate.omit({ animalId: true, type: true }).partial();
+
+/** A reminder the user added, or a dismissal of an automatic reminder (sourceKey). */
+export const reminderCreate = z.object({
+  animalId: uuid.nullable().optional(),
+  dueDate: isoDate,
+  title: z.string().trim().min(1).max(200),
+  /** Set when this marks an automatic reminder as done (e.g. "pcheck:<event id>"). */
+  sourceKey: z.string().max(80).nullable().optional(),
+  done: z.boolean().default(false),
+  notes: optionalText(500),
+});
+export const reminderUpdate = reminderCreate.omit({ sourceKey: true }).partial();

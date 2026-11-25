@@ -102,7 +102,7 @@ export class MoneyModule implements OnModuleInit {
       // Created by the server only; phones can only edit it.
       createSchema: z.object({}).refine(() => false, 'Farm settings already exist'),
       updateSchema: farmSettingsUpdate,
-      fields: ['farmName', 'openingCashPaisa', 'openingCashDate'],
+      fields: ['farmName', 'gestationDays', 'pregnancyCheckDays', 'heatRepeatDays', 'openingCashPaisa', 'openingCashDate'],
       canDelete: false,
     });
   }

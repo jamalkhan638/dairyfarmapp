@@ -48,6 +48,8 @@ export type AnimalForm = {
   purchaseDate?: string | null;
   purchasePricePaisa?: number | null;
   notes?: string | null;
+  /** Set for calves born on the farm. */
+  motherId?: string | null;
 };
 
 /** Latest status entry by date (then by entry time) decides the current status. */
@@ -97,8 +99,8 @@ export async function addAnimal(
 ): Promise<string> {
   const id = newId();
   const statusChangeId = newId();
-  const clean = { ...form, tag: form.tag.trim() };
-  await repo.create('Animal', userId, id, { ...clean, initialStatus: initial.status, initialStatusDate: initial.date, initialStatusChangeId: statusChangeId }, { ...clean, status: initial.status, statusDate: initial.date, motherId: null, photoId: null });
+  const clean = { ...form, tag: form.tag.trim(), motherId: form.motherId ?? null };
+  await repo.create('Animal', userId, id, { ...clean, initialStatus: initial.status, initialStatusDate: initial.date, initialStatusChangeId: statusChangeId }, { ...clean, status: initial.status, statusDate: initial.date, photoId: null });
   // The server records the starting status as the first status-history entry (with
   // statusChangeId). Until then the phone shows the status stored on the animal itself.
   return id;

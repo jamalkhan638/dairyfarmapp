@@ -15,7 +15,8 @@ const ENTITY_KEYS: Record<string, string> = {
   Animal: 'animal', AnimalStatusChange: 'status', Attachment: 'photo', SyncConflict: 'conflict', MilkRecord: 'milk', MilkUsage: 'usage',
   Customer: 'customer', CustomerRate: 'rateShort', MilkDelivery: 'delivery', CustomerPayment: 'payment',
   Supplier: 'supplier', FeedItem: 'feedItem', FeedPurchase: 'purchase', SupplierPayment: 'supplierPayment', FeedConsumption: 'feeding', StockAdjustment: 'stockCount',
-  Expense: 'expense', CapitalEntry: 'capitalEntry', FarmSettings: 'settings',
+  Expense: 'expense', CapitalEntry: 'capitalEntry', FarmSettings: 'farmSettings',
+  HealthEvent: 'healthRecord', BreedingEvent: 'breedingRecord', Reminder: 'reminders',
 };
 export function entityLabel(entity: string) {
   return ENTITY_KEYS[entity] ? t(ENTITY_KEYS[entity]) : entity;
@@ -32,8 +33,12 @@ const FIELD_KEYS: Record<string, string> = {
   feedItemId: 'feedItem', supplierId: 'supplier', category: 'category', bagWeightGrams: 'bagWeight', quantityGrams: 'kgFed', wastedGrams: 'kgWasted',
   bags: 'bagsCount', totalPaisa: 'totalAmount', costPerKgPaisa: 'avgPrice', paymentType: 'paymentType', purchaseId: 'purchase', animalIds: 'fedTo', changeGrams: 'adjustmentWillBe',
   description: 'description', receiptPhotoId: 'receipt', expenseId: 'expense', openingCashPaisa: 'openingCash', openingCashDate: 'openingCashDate', farmName: 'farmName',
+  title: 'healthTitle', medicine: 'medicine', dose: 'dose', vetName: 'vetName', withdrawalEndDate: 'withdrawalEnd', nextDueDate: 'nextDue',
+  sire: 'sire', technician: 'technician', result: 'result', calfId: 'addCalf', calfSex: 'calfSex', dueDate: 'dueDate', done: 'markDone', sourceKey: 'reminders',
+  gestationDays: 'gestationDays', pregnancyCheckDays: 'pregnancyCheckDays', heatRepeatDays: 'heatRepeatDays',
 };
-export function fieldLabel(_entity: string, field: string) {
+export function fieldLabel(entity: string, field: string) {
+  if (entity === 'Reminder' && field === 'title') return t('reminderTitle');
   return FIELD_KEYS[field] ? t(FIELD_KEYS[field]) : field;
 }
 
@@ -56,7 +61,12 @@ export function formatValue(entity: string, field: string, v: unknown, l: Lookup
   if (['date', 'birthDate', 'purchaseDate', 'effectiveDate', 'statusDate', 'effectiveFrom'].includes(field) && typeof v === 'string') return formatDate(v);
   if (field === 'session') return v === 'MORNING' ? t('morning') : t('evening');
   if (field === 'status' && entity !== 'SyncConflict') return t(`s_${v}`);
-  if (field === 'type') return entity === 'CapitalEntry' ? t(`ct_${v}`) : t(`u_${v}`);
+  if (field === 'type') return entity === 'CapitalEntry' ? t(`ct_${v}`) : entity === 'HealthEvent' ? t(`ht_${v}`) : entity === 'BreedingEvent' ? t(`bt_${v}`) : t(`u_${v}`);
+  if (field === 'method' && entity === 'BreedingEvent') return t(`im_${v}`);
+  if (field === 'result') return t(`pr_${v}`);
+  if (field === 'calfSex') return v === 'FEMALE' ? t('female') : t('male');
+  if ((field === 'withdrawalEndDate' || field === 'nextDueDate' || field === 'dueDate') && typeof v === 'string') return formatDate(v);
+  if (field === 'calfId' && typeof v === 'string') return l.tagOf?.(v) ? `#${l.tagOf(v)}` : '✓';
   if (field === 'openingCashPaisa' && typeof v === 'number') return formatPKR(v);
   if (field === 'openingCashDate' && typeof v === 'string') return formatDate(v);
   if (field === 'receiptPhotoId' || field === 'expenseId') return '✓';
@@ -89,7 +99,10 @@ export function recordTitle(entity: string, data: Record<string, any> | null | u
     case 'StockAdjustment': return `${l.itemOf?.(data.feedItemId) ?? ''} · ${formatDate(data.date)}`;
     case 'Expense': return `${t(`ec_${data.category}`)} · ${formatDate(data.date)} · ${formatPKR(data.amountPaisa)}`;
     case 'CapitalEntry': return `${t(`ct_${data.type}`)} · ${formatDate(data.date)} · ${formatPKR(data.amountPaisa)}`;
-    case 'FarmSettings': return t('settings');
+    case 'FarmSettings': return t('farmSettings');
+    case 'HealthEvent': return `#${l.tagOf?.(data.animalId) ?? ''} · ${data.title ?? ''} · ${formatDate(data.date)}`;
+    case 'BreedingEvent': return `#${l.tagOf?.(data.animalId) ?? ''} · ${t(`bt_${data.type}`)} · ${formatDate(data.date)}`;
+    case 'Reminder': return `${data.title ?? ''} · ${formatDate(data.dueDate)}`;
     default: return '';
   }
 }

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { MilkSession } from '@dairy/shared';
 import { useSession } from '../../../lib/session';
 import { useMilkData } from '../../../lib/use-milk';
+import { withdrawalUntil } from '../../../domain/health';
 import { local, newId } from '../../../lib/db';
 import { isActive } from '../../../domain/animals';
 import { litres, milkingOn, parseLitres, saveMilkSession, statusOn } from '../../../domain/milk';
@@ -81,6 +82,7 @@ export default function MilkEntry() {
       {shown.map((a) => {
         const rec = existing.find((r) => r.data.animalId === a.animal.id);
         const notMilking = statusOn(a, date) !== 'MILKING';
+        const wd = withdrawalUntil(data.health, a.animal.id, date);
         return (
           <View key={a.animal.id} style={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12 }}>
             <Row>
@@ -88,6 +90,7 @@ export default function MilkEntry() {
               <View style={{ flex: 1 }}>
                 <Body style={{ fontWeight: '800', fontSize: 19 }}>#{a.animal.tag}{a.animal.name ? ` ${a.animal.name}` : ''}</Body>
                 {notMilking ? <Muted>{t('notMilkingNow')}</Muted> : null}
+                {wd ? <Badge text={t('underWithdrawal', { date: formatDate(wd.until) })} tone="bad" /> : null}
                 {rec && rec.syncState !== 'synced' ? <Badge text={t(rec.syncState === 'pending' ? 'statePending' : 'stateConflict')} tone={rec.syncState === 'pending' ? 'warn' : 'bad'} /> : null}
               </View>
               <TextInput

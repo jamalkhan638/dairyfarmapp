@@ -4,6 +4,7 @@ import * as Network from 'expo-network';
 import type { SyncStatus } from '../sync/engine';
 import { local } from './db';
 import { useSession } from './session';
+import { scheduleReminderNotifications } from './notifications';
 
 const Ctx = createContext<{ status: SyncStatus; online: boolean; syncNow: () => void } | null>(null);
 
@@ -22,6 +23,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!me) return;
     const { engine, repo } = local();
+    let notifyTimer: ReturnType<typeof setTimeout> | null = null;
+    // Re-plan phone notifications a little after any change (local or downloaded).
+    const replan = () => {
+      if (notifyTimer) clearTimeout(notifyTimer);
+      notifyTimer = setTimeout(() => scheduleReminderNotifications(), 3000);
+    };
+    const unsubReplan = repo.subscribe(replan);
+    replan();
     const run = () => {
       engine.sync().then(() => {
         // Permission changes by the owner show up after the next sync.
@@ -47,6 +56,8 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     return () => {
       unsubStatus();
       unsubRepo();
+      unsubReplan();
+      if (notifyTimer) clearTimeout(notifyTimer);
       net.remove();
       app.remove();
       clearInterval(timer);

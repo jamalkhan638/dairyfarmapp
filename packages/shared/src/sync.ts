@@ -5,6 +5,7 @@ export const SYNC_ENTITIES = [
   'Customer', 'CustomerRate', 'MilkDelivery', 'CustomerPayment',
   'Supplier', 'FeedItem', 'FeedPurchase', 'SupplierPayment', 'FeedConsumption', 'StockAdjustment',
   'Expense', 'CapitalEntry', 'FarmSettings',
+  'HealthEvent', 'BreedingEvent', 'Reminder',
 ] as const;
 export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 

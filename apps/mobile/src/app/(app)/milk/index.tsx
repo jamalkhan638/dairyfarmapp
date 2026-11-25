@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { MILK_USAGE_TYPES } from '@dairy/shared';
 import { useSession } from '../../../lib/session';
 import { useMilkData } from '../../../lib/use-milk';
+import { withdrawalUntil } from '../../../domain/health';
+import { local, newId } from '../../../lib/db';
 import { litres, summarizeDay } from '../../../domain/milk';
 import { formatDate, today } from '../../../lib/format';
 import { Badge, Body, Button, Card, DateField, InfoLine, Muted, Notice, Row, Screen, Section } from '../../../components/ui';
@@ -14,7 +16,7 @@ export default function MilkDay() {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ date?: string }>();
-  const { can } = useSession();
+  const { me, can } = useSession();
   const [date, setDate] = useState<string>(params.date ?? today());
   const data = useMilkData();
 
@@ -23,6 +25,15 @@ export default function MilkDay() {
   const s = summarizeDay(date, data.animals, data.records.map((r) => r.data), data.usages.map((u) => u.data), data.soldByDate?.[date] ?? 0);
   const L = (ml: number) => `${litres(ml)} ${t('L')}`;
   const dayUsages = data.usages.filter((u) => u.data.date === date);
+  // Milk from cows under withdrawal that day, minus what was already recorded as discarded for them.
+  const withdrawalMilk = data.animals
+    .map((a) => {
+      if (!withdrawalUntil(data.health, a.animal.id, date)) return null;
+      const produced = data.records.filter((r) => r.data.animalId === a.animal.id && r.data.date === date && !r.data.deletedAt).reduce((t, r) => t + r.data.quantityMl, 0);
+      const discarded = dayUsages.filter((u) => u.data.type === 'DISCARDED' && u.data.animalId === a.animal.id).reduce((t, u) => t + u.data.quantityMl, 0);
+      return produced - discarded > 0 ? { a, ml: produced - discarded } : null;
+    })
+    .filter(Boolean) as { a: (typeof data.animals)[number]; ml: number }[];
   const tag = (id: string | null) => (id ? data.animals.find((a) => a.animal.id === id)?.animal.tag : null);
 
   return (
@@ -46,6 +57,19 @@ export default function MilkDay() {
         </Row>
       ) : null}
 
+      {withdrawalMilk.length ? (
+        <Card>
+          <Body style={{ fontWeight: '700' }}>{t('withdrawalToday')}</Body>
+          {withdrawalMilk.map(({ a, ml }) => (
+            <Row key={a.animal.id} style={{ justifyContent: 'space-between' }}>
+              <Body style={{ flexShrink: 1 }}>{t('withdrawalMilk', { tag: a.animal.tag, litres: litres(ml) })}</Body>
+              {can('milk', 'add') ? (
+                <Button title={t('recordDiscarded')} variant="danger" onPress={() => local().repo.create('MilkUsage', me!.id, newId(), { date, type: 'DISCARDED', quantityMl: ml, animalId: a.animal.id, note: t('withdrawalToday') })} />
+              ) : null}
+            </Row>
+          ))}
+        </Card>
+      ) : null}
       {s.missing.length ? (
         <Card>
           <Body style={{ fontWeight: '700' }}>{t('missingEntries')}</Body>

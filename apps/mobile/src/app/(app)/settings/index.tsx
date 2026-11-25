@@ -12,7 +12,7 @@ import { LanguagePicker } from '../../../components/LanguagePicker';
 export default function Settings() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { me, isOwner, logout } = useSession();
+  const { me, isOwner, logout, can } = useSession();
   const { status } = useSync();
   const [pw, setPw] = useState({ current: '', next: '' });
   const [msg, setMsg] = useState<{ tone: 'info' | 'bad'; text: string } | null>(null);
@@ -48,6 +48,7 @@ export default function Settings() {
       <LanguagePicker />
       {isOwner ? <Button title={t('users')} onPress={() => router.push('/settings/users')} /> : null}
       <Button title={t('syncDetails')} variant="secondary" onPress={() => router.push('/sync')} />
+      {can('finance', 'edit') ? <Button title={t('farmSettings')} variant="secondary" onPress={() => router.push('/money/opening')} /> : null}
       <Section>{t('changePassword')}</Section>
       <Field label={t('currentPassword')} value={pw.current} onChangeText={(v) => setPw((p) => ({ ...p, current: v }))} secureTextEntry />
       <Field label={t('newPassword')} value={pw.next} onChangeText={(v) => setPw((p) => ({ ...p, next: v }))} secureTextEntry />

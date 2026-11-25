@@ -17,7 +17,7 @@ export async function createApp() {
 export async function resetDb(app: INestApplication) {
   const prisma = app.get(PrismaService);
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "Customer","CustomerRate","MilkDelivery","CustomerPayment","MilkRecord","MilkUsage","Supplier","FeedItem","FeedPurchase","SupplierPayment","FeedConsumption","StockAdjustment","Expense","CapitalEntry","FarmSettings","AnimalStatusChange","Animal","Attachment","AuditLog","SyncMutation","SyncChange","SyncConflict","RefreshToken","Permission","User" RESTART IDENTITY CASCADE',
+    'TRUNCATE "Customer","CustomerRate","MilkDelivery","CustomerPayment","MilkRecord","MilkUsage","Supplier","FeedItem","FeedPurchase","SupplierPayment","FeedConsumption","StockAdjustment","Expense","CapitalEntry","FarmSettings","HealthEvent","BreedingEvent","Reminder","AnimalStatusChange","Animal","Attachment","AuditLog","SyncMutation","SyncChange","SyncConflict","RefreshToken","Permission","User" RESTART IDENTITY CASCADE',
   );
 }
 

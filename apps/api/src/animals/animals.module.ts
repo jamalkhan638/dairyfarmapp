@@ -44,7 +44,7 @@ export class AnimalsModule implements OnModuleInit {
     EntityRegistry.register({
       name: 'Animal',
       moduleFor: () => 'animals',
-      alsoVisibleTo: ['milk', 'health', 'feed', 'sales'],
+      alsoVisibleTo: ['milk', 'health', 'feed', 'sales', 'expenses', 'finance', 'reports'],
       actions: { create: 'add', update: 'edit', delete: 'delete' },
       delegate: (tx) => tx.animal,
       createSchema: animalCreate,
