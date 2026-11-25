@@ -15,3 +15,13 @@ export function BalanceText({ paisa }: { paisa: number }) {
   );
 }
 
+
+/** What the farm owes a supplier: "We owe Rs …" (red), advance (green) or "Settled". */
+export function OwedText({ paisa }: { paisa: number }) {
+  const { t } = useTranslation();
+  if (paisa === 0) return <Muted>{t('settled')}</Muted>;
+  return paisa > 0
+    ? <Body style={{ color: colors.danger, fontWeight: '700' }}>{t('weOwe')} {formatPKR(paisa)}</Body>
+    : <Body style={{ color: colors.primaryDark, fontWeight: '700' }}>{t('theyOwe')} {formatPKR(-paisa)}</Body>;
+}
+

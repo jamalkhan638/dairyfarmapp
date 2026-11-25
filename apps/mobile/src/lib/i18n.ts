@@ -42,7 +42,7 @@ const en = {
   emptyValue: '(empty)',
   // home
   home: 'Home', hello: 'Assalam-o-Alaikum, {{name}}', herd: 'Herd', animals: 'Animals', settings: 'Settings',
-  comingSoon: 'Coming in the next phases: feed, expenses, health and reports.',
+  comingSoon: 'Coming in the next phases: expenses, health and reports.',
   // animals
   addAnimal: 'Add animal', editAnimal: 'Edit animal', animal: 'Animal', tag: 'Tag number', breed: 'Breed', sex: 'Sex', female: 'Female', male: 'Male',
   birthDate: 'Birth date', birthDateEstimated: 'Birth date is an estimate', age: 'Age', purchaseDate: 'Purchase date', purchasePrice: 'Purchase price (PKR)',
@@ -94,6 +94,29 @@ const en = {
   invalidAmount: 'Enter an amount like 1500', invalidRate: 'Enter a rate like 210', deleteCustomerQ: 'Delete this customer?', inUseUseInactive: 'Customers with sales cannot be deleted. Mark as inactive instead.',
   chooseCustomer: 'Choose customer', thisMonth: 'This month', monthSummary: 'Month summary', soldTo: 'Sold to customers',
   nameTaken: 'Another customer already has this name',
+
+  // feed
+  feed: 'Feed', feedItems: 'Feed items', feedItem: 'Feed item', addFeedItem: 'Add feed item', editFeedItem: 'Edit feed item',
+  category: 'Type of feed', fc_CONCENTRATE: 'Wanda / concentrate', fc_GREEN_FODDER: 'Green fodder', fc_SILAGE: 'Silage', fc_MINERAL: 'Minerals', fc_OTHER: 'Other',
+  bagWeight: 'Bag weight (kg)', bagWeightHint: 'Leave empty for loose feed bought by the kg.', kgUnit: 'kg', bags: 'bags', bagsCount: 'Number of bags',
+  stock: 'Stock', stockNow: 'In store now', stockNegative: 'Stock is below zero: a purchase may be missing, or do a stock count.',
+  suppliers: 'Suppliers', supplier: 'Supplier', addSupplier: 'Add supplier', editSupplier: 'Edit supplier', noSupplier: 'No supplier (cash at market)',
+  activeSupplier: 'Supplier active', weOwe: 'We owe', theyOwe: 'Paid in advance', supplierTotalOwed: 'We owe suppliers in total',
+  purchase: 'Feed purchase', purchases: 'Purchases', addPurchase: 'Buy feed', editPurchase: 'Edit purchase', buyBy: 'Bought by',
+  byBag: 'Bags', byKg: 'Kilograms', pricePerBag: 'Price per bag (Rs)', pricePerKg: 'Price per kg (Rs)', totalAmount: 'Total amount',
+  paymentType: 'Cash / credit', creditNeedsSupplier: 'Choose a supplier for a credit purchase.', cashPurchaseNote: 'Cash purchase: payment recorded automatically.',
+  purchaseNotExpense: 'Buying feed adds to stock. It becomes an expense when it is fed (or wasted).',
+  paySupplier: 'Pay supplier', supplierPayment: 'Supplier payment', editSupplierPayment: 'Edit supplier payment', cashPurchaseLinked: 'This payment belongs to a cash purchase. Change or delete the purchase instead.',
+  purchaseFixedFields: 'Feed item, supplier and cash/credit cannot be changed. Delete and add again if needed.',
+  feeding: 'Feeding', recordFeeding: 'Record feeding', editFeeding: 'Edit feeding', feedingLog: 'Feeding log', kgFed: 'Kg fed', kgWasted: 'Kg wasted',
+  fedTo: 'Fed to', ft_one: 'One animal', ft_milking: 'All milking cows', ft_all: 'All animals on farm', ft_pick: 'Choose animals',
+  animalsCount: '{{count}} animals', sharedEstimate: 'Shared feed: cost per cow is an estimate (split equally).',
+  feedExpense: 'Feed expense', feedExpenseNote: 'Feed expense = feed fed and wasted, at the average purchase price. Purchases are not counted again.',
+  unpricedFeed: '{{kg}} kg fed with no purchase price yet: not included in the cost.', avgPrice: 'Average price', costEstimate: 'Estimated cost',
+  stockCount: 'Stock count', countedKg: 'Counted in store (kg)', appShows: 'App shows', adjustmentWillBe: 'Correction', noChange: 'No correction needed',
+  noFeedItems: 'No feed items yet. Add wanda, green fodder, silage, minerals…', noSuppliers: 'No suppliers yet.', chooseItem: 'Choose feed item',
+  chooseAnimals: 'Choose at least one animal', invalidKg: 'Enter kg like 12.5', itemNameTaken: 'Another feed item already has this name', supplierNameTaken: 'Another supplier already has this name',
+  feedLast30: 'Feed, last 30 days', perAnimal: 'Per animal', fullAccessDefault: 'New users get full access. Untick anything they should not do.',
 };
 
 type Dict = typeof en;
@@ -133,7 +156,7 @@ const ur: Dict = {
   history: 'تبدیلیوں کی تاریخ', historyOffline: 'تاریخ انٹرنیٹ پر دکھائی جاتی ہے۔', created: 'شامل کیا', updated: 'تبدیل کیا', deleted: 'حذف کیا', conflictResolved: 'ٹکراؤ حل کیا',
   emptyValue: '(خالی)',
   home: 'ہوم', hello: 'السلام علیکم، {{name}}', herd: 'ریوڑ', animals: 'جانور', settings: 'ترتیبات',
-  comingSoon: 'اگلے مراحل میں: چارہ، اخراجات، صحت اور رپورٹس۔',
+  comingSoon: 'اگلے مراحل میں: اخراجات، صحت اور رپورٹس۔',
   addAnimal: 'جانور شامل کریں', editAnimal: 'جانور کی تفصیل تبدیل کریں', animal: 'جانور', tag: 'ٹیگ نمبر', breed: 'نسل', sex: 'جنس', female: 'مادہ', male: 'نر',
   birthDate: 'تاریخ پیدائش', birthDateEstimated: 'تاریخ پیدائش اندازاً ہے', age: 'عمر', purchaseDate: 'خریداری کی تاریخ', purchasePrice: 'قیمت خرید (روپے)',
   notes: 'نوٹ', photo: 'تصویر', takePhoto: 'تصویر کھینچیں', choosePhoto: 'تصویر منتخب کریں', removePhoto: 'تصویر ہٹائیں',
@@ -181,6 +204,28 @@ const ur: Dict = {
   invalidAmount: 'رقم اس طرح لکھیں: 1500', invalidRate: 'ریٹ اس طرح لکھیں: 210', deleteCustomerQ: 'یہ گاہک حذف کریں؟', inUseUseInactive: 'جن گاہکوں کی فروخت ہو چکی ہو وہ حذف نہیں ہو سکتے۔ انہیں غیر فعال کریں۔',
   chooseCustomer: 'گاہک منتخب کریں', thisMonth: 'یہ مہینہ', monthSummary: 'مہینے کا خلاصہ', soldTo: 'گاہکوں کو فروخت',
   nameTaken: 'اس نام کا گاہک پہلے سے موجود ہے',
+
+  feed: 'چارہ', feedItems: 'چارے کی اقسام', feedItem: 'چارہ', addFeedItem: 'چارہ شامل کریں', editFeedItem: 'چارہ تبدیل کریں',
+  category: 'چارے کی قسم', fc_CONCENTRATE: 'ونڈا', fc_GREEN_FODDER: 'سبز چارہ', fc_SILAGE: 'سائیلج', fc_MINERAL: 'منرلز', fc_OTHER: 'دیگر',
+  bagWeight: 'بوری کا وزن (کلو)', bagWeightHint: 'کھلے چارے کے لیے خالی چھوڑیں جو کلو کے حساب سے آتا ہے۔', kgUnit: 'کلو', bags: 'بوریاں', bagsCount: 'بوریوں کی تعداد',
+  stock: 'اسٹاک', stockNow: 'اس وقت اسٹور میں', stockNegative: 'اسٹاک صفر سے کم ہے: شاید کوئی خریداری درج نہیں ہوئی، یا اسٹاک گنتی کریں۔',
+  suppliers: 'سپلائر', supplier: 'سپلائر', addSupplier: 'سپلائر شامل کریں', editSupplier: 'سپلائر تبدیل کریں', noSupplier: 'کوئی سپلائر نہیں (منڈی سے نقد)',
+  activeSupplier: 'سپلائر فعال', weOwe: 'ہمارے ذمے', theyOwe: 'پیشگی ادا', supplierTotalOwed: 'سپلائرز کا کل بقایا',
+  purchase: 'چارے کی خریداری', purchases: 'خریداریاں', addPurchase: 'چارہ خریدیں', editPurchase: 'خریداری تبدیل کریں', buyBy: 'خریداری',
+  byBag: 'بوری', byKg: 'کلو', pricePerBag: 'فی بوری قیمت (روپے)', pricePerKg: 'فی کلو قیمت (روپے)', totalAmount: 'کل رقم',
+  paymentType: 'نقد / ادھار', creditNeedsSupplier: 'ادھار خریداری کے لیے سپلائر منتخب کریں۔', cashPurchaseNote: 'نقد خریداری: ادائیگی خود درج ہو گئی۔',
+  purchaseNotExpense: 'چارہ خریدنے سے اسٹاک بڑھتا ہے۔ یہ خرچ تب بنتا ہے جب کھلایا (یا ضائع) ہو۔',
+  paySupplier: 'سپلائر کو ادائیگی', supplierPayment: 'سپلائر ادائیگی', editSupplierPayment: 'سپلائر ادائیگی تبدیل کریں', cashPurchaseLinked: 'یہ ادائیگی نقد خریداری کی ہے۔ اس کی بجائے خریداری تبدیل یا حذف کریں۔',
+  purchaseFixedFields: 'چارہ، سپلائر اور نقد/ادھار تبدیل نہیں ہو سکتے۔ ضرورت ہو تو حذف کر کے دوبارہ شامل کریں۔',
+  feeding: 'خوراک', recordFeeding: 'خوراک درج کریں', editFeeding: 'خوراک تبدیل کریں', feedingLog: 'خوراک کا ریکارڈ', kgFed: 'کھلایا (کلو)', kgWasted: 'ضائع (کلو)',
+  fedTo: 'کس کو کھلایا', ft_one: 'ایک جانور', ft_milking: 'تمام دودھ دینے والی', ft_all: 'فارم کے تمام جانور', ft_pick: 'جانور منتخب کریں',
+  animalsCount: '{{count}} جانور', sharedEstimate: 'مشترکہ خوراک: فی گائے خرچ اندازہ ہے (برابر تقسیم)۔',
+  feedExpense: 'چارے کا خرچ', feedExpenseNote: 'چارے کا خرچ = کھلایا اور ضائع شدہ چارہ، اوسط قیمت خرید پر۔ خریداری دوبارہ نہیں گنی جاتی۔',
+  unpricedFeed: '{{kg}} کلو ایسا چارہ کھلایا جس کی قیمت خرید ابھی درج نہیں: خرچ میں شامل نہیں۔', avgPrice: 'اوسط قیمت', costEstimate: 'اندازاً خرچ',
+  stockCount: 'اسٹاک گنتی', countedKg: 'اسٹور میں گنا گیا (کلو)', appShows: 'ایپ میں', adjustmentWillBe: 'درستگی', noChange: 'درستگی کی ضرورت نہیں',
+  noFeedItems: 'ابھی کوئی چارہ نہیں۔ ونڈا، سبز چارہ، سائیلج، منرلز شامل کریں…', noSuppliers: 'ابھی کوئی سپلائر نہیں۔', chooseItem: 'چارہ منتخب کریں',
+  chooseAnimals: 'کم از کم ایک جانور منتخب کریں', invalidKg: 'کلو اس طرح لکھیں: 12.5', itemNameTaken: 'اس نام کا چارہ پہلے سے موجود ہے', supplierNameTaken: 'اس نام کا سپلائر پہلے سے موجود ہے',
+  feedLast30: 'چارہ، پچھلے 30 دن', perAnimal: 'فی جانور', fullAccessDefault: 'نئے صارف کو مکمل اجازت ملتی ہے۔ جو کام نہ کرنے دینا ہو اس کا نشان ہٹا دیں۔',
 };
 
 export type TKey = keyof Dict;

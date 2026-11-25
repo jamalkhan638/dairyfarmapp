@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ACTIONS, MODULES, emptyPermissionMap, type PermissionMap, type Role } from '@dairy/shared';
+import { ACTIONS, MODULES, fullPermissionMap, type PermissionMap, type Role } from '@dairy/shared';
 import { api } from '../../../../lib/api';
 import { useSession } from '../../../../lib/session';
 import { Body, Button, Card, Choice, Field, Muted, Notice, Row, Screen, Section, Toggle } from '../../../../components/ui';
@@ -21,7 +21,7 @@ export default function UserEdit() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<Role>('WORKER');
   const [active, setActive] = useState(true);
-  const [perms, setPerms] = useState<PermissionMap>(emptyPermissionMap());
+  const [perms, setPerms] = useState<PermissionMap>(fullPermissionMap());
   const [msg, setMsg] = useState<{ tone: 'info' | 'bad'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -78,6 +78,7 @@ export default function UserEdit() {
       {msg ? <Notice tone={msg.tone} text={msg.text} /> : null}
 
       <Section>{t('permissions')}</Section>
+      {isNew && role !== 'OWNER' ? <Muted>{t('fullAccessDefault')}</Muted> : null}
       {role === 'OWNER' ? (
         <Muted>{t('ownerHasAll')}</Muted>
       ) : (

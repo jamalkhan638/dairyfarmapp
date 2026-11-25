@@ -11,9 +11,10 @@ import { AnimalPhoto } from '../../../../components/AnimalPhoto';
 import { RecordMeta } from '../../../../components/RecordMeta';
 import { HistoryList } from '../../../../components/HistoryList';
 import { AnimalMilk } from '../../../../components/AnimalMilk';
+import { AnimalFeed } from '../../../../components/AnimalFeed';
 import { Badge, Body, Button, Card, Choice, InfoLine, Muted, Notice, Row, Screen, Title } from '../../../../components/ui';
 
-type Tab = 'info' | 'milk' | 'status' | 'history';
+type Tab = 'info' | 'milk' | 'feed' | 'status' | 'history';
 
 export default function AnimalDetail() {
   const { t } = useTranslation();
@@ -47,7 +48,7 @@ export default function AnimalDetail() {
       {record.syncState === 'rejected' ? <Notice tone="bad" text={t('rejectedCount', { count: 1 })} /> : null}
       {record.syncState !== 'synced' && record.syncState !== 'pending' ? <Button title={t('syncDetails')} variant="secondary" onPress={() => router.push('/sync')} /> : null}
 
-      <Choice value={tab} onChange={setTab} options={[{ value: 'info', label: t('details') }, ...(can('milk', 'view') && a.sex === 'FEMALE' ? [{ value: 'milk' as Tab, label: t('milk') }] : []), { value: 'status', label: t('statusHistory') }, { value: 'history', label: t('history') }]} />
+      <Choice value={tab} onChange={setTab} options={[{ value: 'info', label: t('details') }, ...(can('milk', 'view') && a.sex === 'FEMALE' ? [{ value: 'milk' as Tab, label: t('milk') }] : []), ...(can('feed', 'view') ? [{ value: 'feed' as Tab, label: t('feed') }] : []), { value: 'status', label: t('statusHistory') }, { value: 'history', label: t('history') }]} />
 
       {tab === 'info' ? (
         <>
@@ -84,6 +85,7 @@ export default function AnimalDetail() {
       ) : null}
 
       {tab === 'milk' ? <AnimalMilk animalId={a.id} /> : null}
+      {tab === 'feed' ? <AnimalFeed animalId={a.id} /> : null}
 
       {tab === 'history' ? <HistoryList entity="Animal" id={a.id} /> : null}
     </Screen>

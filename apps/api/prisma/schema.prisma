@@ -416,3 +416,150 @@ model CustomerPayment {
 
   @@index([customerId, date])
 }
+
+// ---------- Feed & suppliers ----------
+
+enum FeedCategory {
+  CONCENTRATE
+  GREEN_FODDER
+  SILAGE
+  MINERAL
+  OTHER
+}
+
+model Supplier {
+  id      String  @id @db.Uuid
+  name    String
+  phone   String?
+  address String?
+  notes   String?
+  active  Boolean @default(true)
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+}
+
+model FeedItem {
+  id             String       @id @db.Uuid
+  name           String
+  category       FeedCategory
+  /// Weight of one bag in grams; null for loose feed.
+  bagWeightGrams Int?
+  notes          String?
+  active         Boolean      @default(true)
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+}
+
+/// Feed bought: adds to stock. Not an expense; feeding it is.
+model FeedPurchase {
+  id             String   @id @db.Uuid
+  feedItemId     String   @db.Uuid
+  supplierId     String?  @db.Uuid
+  date           String
+  quantityGrams  Int
+  bags           Float?
+  totalPaisa     Int
+  /// Calculated by the server: totalPaisa per kg.
+  costPerKgPaisa Int
+  paymentType    SaleType
+  cashPaymentId  String?  @db.Uuid
+  note           String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([feedItemId, date])
+  @@index([supplierId])
+}
+
+/// Money paid to a supplier. Separate from purchases; partial payments are normal.
+model SupplierPayment {
+  id          String        @id @db.Uuid
+  supplierId  String        @db.Uuid
+  date        String
+  amountPaisa Int
+  method      PaymentMethod
+  /// Set when created automatically for a cash purchase.
+  purchaseId  String?       @db.Uuid
+  note        String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([supplierId, date])
+}
+
+/// Feed given on a day. One animal = individual feeding; several = shared (cost per cow is an estimate).
+model FeedConsumption {
+  id            String   @id @db.Uuid
+  feedItemId    String   @db.Uuid
+  date          String
+  quantityGrams Int
+  wastedGrams   Int      @default(0)
+  animalIds     String[] @db.Uuid
+  note          String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([date])
+  @@index([feedItemId, date])
+}
+
+/// Stock correction after counting the store.
+model StockAdjustment {
+  id          String  @id @db.Uuid
+  feedItemId  String  @db.Uuid
+  date        String
+  changeGrams Int
+  reason      String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([feedItemId])
+}

@@ -27,3 +27,6 @@ export type SaleType = (typeof SALE_TYPES)[number];
 
 export const PAYMENT_METHODS = ['CASH', 'BANK', 'MOBILE'] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const FEED_CATEGORIES = ['CONCENTRATE', 'GREEN_FODDER', 'SILAGE', 'MINERAL', 'OTHER'] as const;
+export type FeedCategory = (typeof FEED_CATEGORIES)[number];

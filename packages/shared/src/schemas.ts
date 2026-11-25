@@ -133,3 +133,90 @@ export const customerPaymentCreate = z.object({
   note: optionalText(500),
 });
 export const customerPaymentUpdate = customerPaymentCreate.omit({ customerId: true }).partial();
+
+// ---------- Feed & suppliers ----------
+import { FEED_CATEGORIES } from './enums';
+
+const MAX_GRAMS = 100_000_000; // 100 tonnes
+
+export const supplierCreate = z.object({
+  name: z.string().trim().min(1).max(80),
+  phone: optionalText(30),
+  address: optionalText(200),
+  notes: optionalText(1000),
+  active: z.boolean().default(true),
+});
+export const supplierUpdate = z.object({
+  name: z.string().trim().min(1).max(80),
+  phone: optionalText(30),
+  address: optionalText(200),
+  notes: optionalText(1000),
+  active: z.boolean(),
+}).partial();
+
+export const feedItemCreate = z.object({
+  name: z.string().trim().min(1).max(80),
+  category: z.enum(FEED_CATEGORIES),
+  /** Weight of one bag; null for loose feed (e.g. green fodder by the kg). */
+  bagWeightGrams: z.number().int().positive().max(1_000_000).nullable().optional(),
+  notes: optionalText(500),
+  active: z.boolean().default(true),
+});
+export const feedItemUpdate = z.object({
+  name: z.string().trim().min(1).max(80),
+  category: z.enum(FEED_CATEGORIES),
+  bagWeightGrams: z.number().int().positive().max(1_000_000).nullable(),
+  notes: optionalText(500),
+  active: z.boolean(),
+}).partial();
+
+/** Feed bought. Adds to stock; it is NOT an expense (feeding it is). */
+export const feedPurchaseCreate = z.object({
+  feedItemId: uuid,
+  /** null = bought without a named supplier (e.g. cash at the market). */
+  supplierId: uuid.nullable().optional(),
+  date: isoDate,
+  quantityGrams: z.number().int().positive().max(MAX_GRAMS),
+  /** Number of bags, if bought by the bag (for information). */
+  bags: z.number().positive().max(100_000).nullable().optional(),
+  totalPaisa: z.number().int().positive().max(1_000_000_000),
+  paymentType: z.enum(SALE_TYPES),
+  cashPaymentId: uuid.nullable().optional(),
+  note: optionalText(500),
+});
+export const feedPurchaseUpdate = feedPurchaseCreate.pick({ date: true, quantityGrams: true, bags: true, totalPaisa: true, note: true }).partial();
+
+export const supplierPaymentCreate = z.object({
+  supplierId: uuid,
+  date: isoDate,
+  amountPaisa: z.number().int().positive().max(1_000_000_000),
+  method: z.enum(PAYMENT_METHODS),
+  note: optionalText(500),
+});
+export const supplierPaymentUpdate = supplierPaymentCreate.omit({ supplierId: true }).partial();
+
+/** Feed actually given (and wasted) on a day, to one animal or shared by a group. */
+export const feedConsumptionCreate = z.object({
+  feedItemId: uuid,
+  date: isoDate,
+  quantityGrams: z.number().int().min(0).max(MAX_GRAMS),
+  wastedGrams: z.number().int().min(0).max(MAX_GRAMS).default(0),
+  /** The animals that shared this feed. One animal = individual feeding. */
+  animalIds: z.array(uuid).min(1).max(500),
+  note: optionalText(500),
+}).refine((v) => v.quantityGrams + v.wastedGrams > 0, { message: 'Enter the kg fed or wasted' });
+export const feedConsumptionUpdate = z.object({
+  date: isoDate,
+  quantityGrams: z.number().int().min(0).max(MAX_GRAMS),
+  wastedGrams: z.number().int().min(0).max(MAX_GRAMS),
+  note: optionalText(500),
+}).partial();
+
+/** Correction after counting the store: + found more, − less than the app showed. */
+export const stockAdjustmentCreate = z.object({
+  feedItemId: uuid,
+  date: isoDate,
+  changeGrams: z.number().int().min(-MAX_GRAMS).max(MAX_GRAMS).refine((n) => n !== 0, 'Change cannot be 0'),
+  reason: optionalText(300),
+});
+export const stockAdjustmentUpdate = stockAdjustmentCreate.pick({ changeGrams: true, reason: true }).partial();

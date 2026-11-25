@@ -2,7 +2,7 @@ import { BadRequestException, Body, ConflictException, Controller, Get, HttpCode
 import * as argon2 from 'argon2';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import { ACTIONS, MODULES, type PermissionMap, type UserSummary } from '@dairy/shared';
+import { ACTIONS, MODULES, fullPermissionMap, type PermissionMap, type UserSummary } from '@dairy/shared';
 import { CurrentUser, OwnerOnly, type AuthUser } from '../common/auth-user';
 import { parseBody } from '../common/zod';
 import { PrismaService, type Tx } from '../prisma/prisma.service';
@@ -19,7 +19,8 @@ const createSchema = z.object({
   username: usernameSchema,
   password: passwordSchema,
   role: z.enum(['OWNER', 'WORKER']).default('WORKER'),
-  permissions: permissionsSchema.default({}),
+  /** Not given = full access to every section (the farm's default). */
+  permissions: permissionsSchema.optional(),
 });
 const updateSchema = z.object({
   name: z.string().trim().min(1).max(80).optional(),
@@ -55,7 +56,7 @@ class UsersController {
       await tx.user.create({
         data: {
           id, name: b.name, username: b.username, passwordHash, role: b.role, createdById: owner.id, updatedById: owner.id,
-          permissions: { create: mapToRows(b.permissions as Partial<PermissionMap>) },
+          permissions: { create: mapToRows((b.permissions ?? fullPermissionMap()) as Partial<PermissionMap>) },
         },
       });
       const after = await this.summary(id, tx);

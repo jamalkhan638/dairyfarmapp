@@ -25,3 +25,8 @@ export function farmToday(now: Date = new Date()): string {
 export function saleAmountPaisa(quantityMl: number, ratePaisaPerLitre: number): number {
   return Math.round((quantityMl * ratePaisaPerLitre) / 1000);
 }
+
+/** Average price per kg (in paisa) from a total amount and grams. */
+export function costPerKgPaisa(totalPaisa: number, grams: number): number {
+  return grams > 0 ? Math.round((totalPaisa * 1000) / grams) : 0;
+}

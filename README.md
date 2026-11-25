@@ -42,9 +42,21 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - Balances per customer and in total; monthly statement with opening balance, milk given, paid, closing balance
 - The milk screens now show "Sold" from deliveries (only to users who may see sales)
 
+**Phase 4 – Feed & suppliers: done**
+- Feed items (wanda, green fodder, silage, minerals, other) with a bag weight you set per item
+- Suppliers with phone/address, active/inactive, and what the farm owes each one
+- Buy feed by bags or by kg, cash or credit, from a supplier or cash at the market. The server stores the price per kg
+- A cash purchase from a supplier records its payment automatically. Supplier payments are separate records (partial payments are fine)
+- Record feeding for one animal, all milking cows, all animals, or chosen animals, with kg wasted
+- Stock per item: bought − fed − wasted ± stock counts (shown in kg and bags). Warning if below zero
+- Feed expense = feed fed and wasted, at the average purchase price up to that day. Purchases are not counted as expenses
+- Feed with no purchase price yet is shown as "not included", never as free
+- Each animal has a Feed tab (last 30 days). Shared feeding is split equally and marked **Estimate**
+- New users get full access to every section by default (the owner can still untick things)
+
 Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
 
-Next phases: Feed & suppliers → Expenses & capital → Health & breeding → Reports → Release & backups.
+Next phases: Expenses & capital → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
 
@@ -82,7 +94,7 @@ Automated (needs a `dairy_test` database: `createdb dairy_test`):
 ```bash
 npm test
 ```
-51 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
+63 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
 
 By hand on a phone:
 1. **Owner + worker.** As owner: Settings → Users → Add user. Give the worker Animals: See + Add + Edit, but not Delete. Log in as the worker on a second phone.
@@ -116,6 +128,18 @@ By hand on a phone:
 7. **Milk** screen: "Sold" shows today's 12 L + 2 L, and "Remaining" is updated.
 8. Offline: on two phones, enter Hotel's morning delivery for the same day, then reconnect. One delivery is kept and the other phone gets a decision.
 9. A worker with Sales "See + Add" can record deliveries and payments but cannot change rates or edit saved deliveries.
+
+## Verify Phase 4 (Feed)
+
+1. **Feed → Feed items → Add**: "Wanda", type Wanda/concentrate, bag weight 50 kg. Add "Green fodder" with no bag weight.
+2. **Suppliers → Add**: "Haji Feeds".
+3. **Buy feed**: Wanda from Haji Feeds, 4 bags at Rs 4,500, Credit. Total Rs 18,000, Rs 90/kg. Stock shows 200 kg (4 bags). Haji Feeds: "We owe Rs 18,000".
+4. **Pay supplier**: Rs 10,000 to Haji Feeds. Now "We owe Rs 8,000". The supplier statement shows both lines.
+5. **Record feeding**: Wanda, All milking cows, 20 kg fed, 1 kg wasted. Stock drops to 179 kg. Feed expense this month is Rs 1,890 (21 kg × Rs 90), not Rs 18,000.
+6. Open a cow → **Feed** tab: her share of the 21 kg, marked **Estimate**.
+7. **Record feeding**: Green fodder, One animal, 30 kg. It's shown as "fed with no purchase price yet". Then buy green fodder (by kg) and the cost appears.
+8. **Stock count**: Wanda, counted 175 kg. A −4 kg correction is saved and stock shows 175 kg.
+9. Offline: on two phones, one buys feed and the other records feeding and a supplier payment. After syncing, stock and supplier balance match on both.
 
 ## How sync works (short)
 

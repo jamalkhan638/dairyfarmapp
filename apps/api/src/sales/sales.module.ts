@@ -4,9 +4,9 @@ import {
   farmToday, milkDeliveryCreate, milkDeliveryUpdate, saleAmountPaisa,
 } from '@dairy/shared';
 import { RejectError } from '../common/errors';
-import { diff } from '../audit/audit.service';
+import { createLinkedPayment, refuseManagedPayment, syncLinkedPayment, type LinkedPaymentSpec } from '../common/linked-payment';
 import type { Tx } from '../prisma/prisma.service';
-import { EntityRegistry, type EntityContext, type Row } from '../sync/entity-registry';
+import { EntityRegistry } from '../sync/entity-registry';
 
 const PAYMENT_FIELDS = ['customerId', 'date', 'amountPaisa', 'method', 'deliveryId', 'note'];
 
@@ -20,28 +20,15 @@ async function requireCustomer(tx: Tx, id: string) {
   return c;
 }
 
-/** Keep the payment of a cash sale equal to the sale (same amount and date), or remove it with the sale. */
-async function syncCashPayment(ctx: EntityContext, delivery: Row, deleted: boolean) {
-  if (!delivery.cashPaymentId) return;
-  const p = await ctx.tx.customerPayment.findUnique({ where: { id: delivery.cashPaymentId } });
-  if (!p || p.deletedAt) return;
-  const now = new Date(ctx.mutation.clientTime);
-  if (deleted) {
-    const d = await ctx.tx.customerPayment.update({
-      where: { id: p.id },
-      data: { deletedAt: new Date(), deletedById: ctx.user.id, updatedById: ctx.user.id, version: { increment: 1 }, clientUpdatedAt: now },
-    });
-    await ctx.audit('CustomerPayment', p.id, 'DELETE', { deletedAt: { from: null, to: d.deletedAt!.toISOString() } });
-  } else {
-    if (p.amountPaisa === delivery.amountPaisa && p.date === delivery.date) return;
-    const u = await ctx.tx.customerPayment.update({
-      where: { id: p.id },
-      data: { amountPaisa: delivery.amountPaisa, date: delivery.date, updatedById: ctx.user.id, version: { increment: 1 }, clientUpdatedAt: now },
-    });
-    await ctx.audit('CustomerPayment', p.id, 'UPDATE', diff(p, u, ['amountPaisa', 'date']));
-  }
-  await ctx.feed('CustomerPayment', p.id);
-}
+const CASH_SALE: LinkedPaymentSpec = {
+  entity: 'CustomerPayment',
+  delegate: (tx) => tx.customerPayment,
+  partyField: 'customerId',
+  linkField: 'deliveryId',
+  amountField: 'amountPaisa',
+  auditFields: PAYMENT_FIELDS,
+};
+const managed = refuseManagedPayment('deliveryId', 'sale');
 
 /** Customers, their rates, milk deliveries (cash or credit) and payments received. */
 @Module({})
@@ -101,22 +88,12 @@ export class SalesModule implements OnModuleInit {
       },
       findDuplicate: (tx, v, selfId) =>
         tx.milkDelivery.findFirst({ where: { customerId: v.customerId, date: v.date, session: v.session, deletedAt: null, id: { not: selfId } } }),
+      // A cash sale is two records: the sale and the money received for it.
       afterCreate: async (ctx, d) => {
-        if (d.saleType !== 'CASH') return;
-        // A cash sale is two records: the sale and the money received for it.
-        const now = new Date(ctx.mutation.clientTime);
-        if (await ctx.tx.customerPayment.findUnique({ where: { id: d.cashPaymentId } })) throw new RejectError('id_exists', 'Payment id already used');
-        const p = await ctx.tx.customerPayment.create({
-          data: {
-            id: d.cashPaymentId, customerId: d.customerId, date: d.date, amountPaisa: d.amountPaisa, method: 'CASH', deliveryId: d.id,
-            createdById: ctx.user.id, updatedById: ctx.user.id, clientCreatedAt: now, clientUpdatedAt: now,
-          },
-        });
-        await ctx.audit('CustomerPayment', p.id, 'CREATE', diff(null, p, PAYMENT_FIELDS));
-        await ctx.feed('CustomerPayment', p.id);
+        if (d.saleType === 'CASH') await createLinkedPayment(ctx, CASH_SALE, d);
       },
-      afterUpdate: (ctx, d) => syncCashPayment(ctx, d, false),
-      afterDelete: (ctx, d) => syncCashPayment(ctx, d, true),
+      afterUpdate: (ctx, d) => syncLinkedPayment(ctx, CASH_SALE, d, false),
+      afterDelete: (ctx, d) => syncLinkedPayment(ctx, CASH_SALE, d, true),
     });
 
     EntityRegistry.register({
@@ -129,13 +106,11 @@ export class SalesModule implements OnModuleInit {
       fields: PAYMENT_FIELDS,
       canDelete: true,
       validate: async (ctx, v, existing) => {
-        if (existing?.deliveryId) throw new RejectError('managed', 'This payment belongs to a cash sale. Change the sale instead.');
+        managed.validate(existing);
         notInFuture(v.date);
         await requireCustomer(ctx.tx, v.customerId);
       },
-      beforeDelete: async (_ctx, p) => {
-        if (p.deliveryId) throw new RejectError('managed', 'This payment belongs to a cash sale. Delete the sale instead.');
-      },
+      beforeDelete: async (_ctx, p) => managed.beforeDelete(p),
     });
   }
 }

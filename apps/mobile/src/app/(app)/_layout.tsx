@@ -37,6 +37,17 @@ export default function AppLayout() {
         <Stack.Screen name="sales/rate" options={{ title: t('changeRate') }} />
         <Stack.Screen name="sales/payment" options={{ title: t('receivePayment') }} />
         <Stack.Screen name="sales/delivery" options={{ title: t('editDelivery') }} />
+        <Stack.Screen name="feed/index" options={{ title: t('feed') }} />
+        <Stack.Screen name="feed/items" options={{ title: t('feedItems') }} />
+        <Stack.Screen name="feed/item" options={{ title: t('addFeedItem') }} />
+        <Stack.Screen name="feed/suppliers/index" options={{ title: t('suppliers') }} />
+        <Stack.Screen name="feed/suppliers/[id]" options={{ title: t('supplier') }} />
+        <Stack.Screen name="feed/supplier" options={{ title: t('addSupplier') }} />
+        <Stack.Screen name="feed/purchase" options={{ title: t('addPurchase') }} />
+        <Stack.Screen name="feed/supplier-payment" options={{ title: t('paySupplier') }} />
+        <Stack.Screen name="feed/feeding" options={{ title: t('recordFeeding') }} />
+        <Stack.Screen name="feed/log" options={{ title: t('feedingLog') }} />
+        <Stack.Screen name="feed/stock-count" options={{ title: t('stockCount') }} />
         <Stack.Screen name="sync" options={{ title: t('syncDetails') }} />
         <Stack.Screen name="conflict/[id]" options={{ title: t('conflict') }} />
         <Stack.Screen name="history/[entity]/[id]" options={{ title: t('history') }} />
