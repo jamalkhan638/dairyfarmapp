@@ -16,7 +16,10 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -41,7 +44,16 @@
     ],
     "extra": {
       "supportsRTL": true,
-      "apiUrl": "https://dairy.supplymeadow.site/api"
-    }
+      "apiUrl": "https://dairy.supplymeadow.site/api",
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "8504aa57-6682-4703-a4bc-d9fd74fdd3d9"
+      }
+    },
+    "owner": "jamalahmad638"
   }
 }
