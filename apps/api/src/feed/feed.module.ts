@@ -126,9 +126,15 @@ export class FeedModule implements OnModuleInit {
       delegate: (tx) => tx.feedConsumption,
       createSchema: feedConsumptionCreate,
       updateSchema: feedConsumptionUpdate,
-      fields: ['feedItemId', 'date', 'quantityGrams', 'wastedGrams', 'animalIds', 'note'],
+      fields: ['feedItemId', 'date', 'quantityGrams', 'wastedGrams', 'animalIds', 'period', 'note'],
       canDelete: true,
       prepareCreate: (_ctx, input) => ({ ...input, animalIds: [...new Set(input.animalIds as string[])] }),
+      // One monthly total per feed type per month (a second one from another phone becomes a duplicate to decide on).
+      duplicateKeyFields: ['date'],
+      findDuplicate: (tx, v, selfId) =>
+        v.period === 'MONTH'
+          ? tx.feedConsumption.findFirst({ where: { feedItemId: v.feedItemId, period: 'MONTH', date: { startsWith: String(v.date).slice(0, 7) }, deletedAt: null, id: { not: selfId } } })
+          : Promise.resolve(null),
       validate: async (ctx, v, existing) => {
         notInFuture(v.date, today());
         if (v.quantityGrams + v.wastedGrams <= 0) throw new RejectError('invalid', 'Enter the kg fed or wasted');

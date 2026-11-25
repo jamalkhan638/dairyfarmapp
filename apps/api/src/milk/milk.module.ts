@@ -41,8 +41,14 @@ export class MilkModule implements OnModuleInit {
       delegate: (tx) => tx.milkUsage,
       createSchema: milkUsageCreate,
       updateSchema: milkUsageUpdate,
-      fields: ['date', 'type', 'quantityMl', 'animalId', 'note'],
+      fields: ['date', 'type', 'quantityMl', 'animalId', 'session', 'note'],
       canDelete: true,
+      // Entered with a milking: one per date, milking and type (calves / home / discarded).
+      duplicateKeyFields: ['date', 'type', 'session'],
+      findDuplicate: (tx, v, selfId) =>
+        v.session && !v.animalId
+          ? tx.milkUsage.findFirst({ where: { date: v.date, type: v.type, session: v.session, animalId: null, deletedAt: null, id: { not: selfId } } })
+          : Promise.resolve(null),
       validate: async (ctx, values: Row) => {
         notInFuture(values.date);
         if (values.animalId) await requireAnimal(ctx.tx, values.animalId, 'Animal');

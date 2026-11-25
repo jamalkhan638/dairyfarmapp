@@ -10,7 +10,7 @@ export interface FeedPurchase {
 export interface SupplierPayment { id: string; supplierId: string; date: string; amountPaisa: number; method: PaymentMethod; purchaseId: string | null; expenseId?: string | null; note: string | null; deletedAt: string | null }
 /** Minimal shape of an expense, for supplier balances (full type in finance.ts). */
 export interface SupplierExpense { id: string; supplierId: string | null; date: string; amountPaisa: number; category: string; cashPaymentId: string | null; deletedAt: string | null }
-export interface FeedConsumption { id: string; feedItemId: string; date: string; quantityGrams: number; wastedGrams: number; animalIds: string[]; note: string | null; createdById: string; deletedAt: string | null }
+export interface FeedConsumption { id: string; feedItemId: string; date: string; quantityGrams: number; wastedGrams: number; animalIds: string[]; period?: 'DAY' | 'MONTH'; note: string | null; createdById: string; deletedAt: string | null }
 export interface StockAdjustment { id: string; feedItemId: string; date: string; changeGrams: number; reason: string | null; deletedAt: string | null }
 
 export interface FeedData {
@@ -200,4 +200,38 @@ export function bagsText(grams: number, bagWeightGrams: number | null) {
   const bags = Math.floor(grams / bagWeightGrams);
   const rest = grams - bags * bagWeightGrams;
   return { bags, restGrams: rest };
+}
+
+/** The date a monthly total is stored on: the month's last day, or today for the current month. */
+export function monthlyEntryDate(month: string, today: string): string {
+  const [y, m] = month.split('-').map(Number);
+  const last = `${month}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}`;
+  return last < today ? last : today;
+}
+
+/**
+ * Save "feed used this month" for several feed types at once (entered at month end).
+ * One monthly total per feed type and month: changed if it exists, removed if cleared.
+ */
+export async function saveMonthlyFeeding(
+  repo: LocalRepo,
+  userId: string,
+  newId: () => string,
+  month: string,
+  today: string,
+  entries: { feedItemId: string; grams: number | null }[],
+  existing: LocalRecord<FeedConsumption>[],
+  animalIds: string[],
+) {
+  const date = monthlyEntryDate(month, today);
+  for (const e of entries) {
+    const cur = existing.find((c) => c.data.period === 'MONTH' && c.data.feedItemId === e.feedItemId && c.data.date.slice(0, 7) === month && !c.data.deletedAt);
+    if (!e.grams) {
+      if (cur) await repo.remove('FeedConsumption', userId, cur.id);
+    } else if (!cur) {
+      await repo.create('FeedConsumption', userId, newId(), { feedItemId: e.feedItemId, date, quantityGrams: e.grams, wastedGrams: 0, animalIds, period: 'MONTH', note: null });
+    } else if (cur.data.quantityGrams !== e.grams) {
+      await repo.update('FeedConsumption', userId, cur.id, { quantityGrams: e.grams });
+    }
+  }
 }

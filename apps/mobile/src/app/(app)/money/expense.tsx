@@ -9,22 +9,28 @@ import { local, newId } from '../../../lib/db';
 import { attachPhoto } from '../../../lib/photos';
 import { isActive } from '../../../domain/animals';
 import { parseRupees } from '../../../domain/sales';
-import { today } from '../../../lib/format';
+import { kg, parseKg } from '../../../domain/feed';
+import { formatPKR, today } from '../../../lib/format';
 import { PhotoPicker, type PhotoState } from '../../../components/PhotoPicker';
 import { RecordMeta } from '../../../components/RecordMeta';
 import { HistoryList } from '../../../components/HistoryList';
-import { Button, Choice, DateField, Field, Muted, Notice, Screen, Section } from '../../../components/ui';
+import { Button, Card, Choice, DateField, Field, InfoLine, Muted, Notice, Screen, Section } from '../../../components/ui';
 
-/** A daily running cost: vet, medicines, labour, electricity, transport, repairs, other. */
+type Category = ExpenseCategory | 'FEED';
+
+/**
+ * Add an expense. Category "Feed" records feed bought (it goes into the store and is
+ * counted in profit when the monthly feeding is entered). Other categories are daily costs.
+ */
 export default function ExpenseForm() {
   const { t } = useTranslation();
   const router = useRouter();
   const nav = useNavigation();
-  const params = useLocalSearchParams<{ id?: string; animalId?: string }>();
+  const params = useLocalSearchParams<{ id?: string; animalId?: string; category?: Category }>();
   const { me, can } = useSession();
   const d = useFinanceData();
   const rec = params.id ? d?.expenses.find((e) => e.id === params.id) : undefined;
-  const [category, setCategory] = useState<ExpenseCategory>('VET');
+  const [category, setCategory] = useState<Category>(params.category ?? 'FEED');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState<string | null>(today());
   const [desc, setDesc] = useState('');
@@ -33,6 +39,10 @@ export default function ExpenseForm() {
   const [method, setMethod] = useState<PaymentMethod>('CASH');
   const [animalId, setAnimalId] = useState(params.animalId ?? 'none');
   const [photo, setPhoto] = useState<PhotoState>({ newPhoto: null, remove: false });
+  // Feed only
+  const [itemId, setItemId] = useState<string | null>(null);
+  const [qty, setQty] = useState('');
+  const [unit, setUnit] = useState<'bag' | 'kg'>('bag');
   const [filled, setFilled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -52,19 +62,37 @@ export default function ExpenseForm() {
     setFilled(true);
   }, [rec, filled]);
 
-  if (!can('expenses', params.id ? 'view' : 'add')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
+  const isFeed = category === 'FEED';
+  const canAdd = isFeed ? can('feed', 'add') : can('expenses', params.id ? 'view' : 'add');
+  if (!canAdd) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   if (!d) return <Screen>{null}</Screen>;
   const editable = !params.id || can('expenses', 'edit');
   const fixed = !!params.id;
+  const items = d.items.filter((i) => i.data.active);
+  const item = items.find((i) => i.id === itemId)?.data;
+  const useUnit = item?.bagWeightGrams ? unit : 'kg';
+
+  // Feed: work out kg from bags or kg typed.
+  const qn = Number(qty.replace(',', '.'));
+  const grams = useUnit === 'bag' ? (qn > 0 && item?.bagWeightGrams ? Math.round(qn * item.bagWeightGrams) : null) : (() => { const g = parseKg(qty); return typeof g === 'number' && g > 0 ? g : null; })();
 
   const save = async () => {
     setError(null);
     const p = parseRupees(amount);
     if (p === null || p === 'invalid' || p <= 0) return setError(t('invalidAmount'));
     const sup = supplierId === 'none' ? null : supplierId;
-    if (payType === 'CREDIT' && !sup) return setError(t('expenseCreditNeedsSupplier'));
+    if (payType === 'CREDIT' && !sup) return setError(t('creditNeedsSupplier'));
     setSaving(true);
-    const common = { date: date!, category, amountPaisa: p, description: desc.trim() || null, method, animalId: animalId === 'none' ? null : animalId };
+    if (isFeed) {
+      if (!itemId) { setSaving(false); return setError(t('chooseItem')); }
+      if (!grams) { setSaving(false); return setError(t('invalidKg')); }
+      const cashPaymentId = payType === 'CASH' && sup ? newId() : null;
+      const send = { feedItemId: itemId, supplierId: sup, date: date!, quantityGrams: grams, bags: useUnit === 'bag' ? qn : null, totalPaisa: p, paymentType: payType, cashPaymentId, note: desc.trim() || null };
+      await local().repo.create('FeedPurchase', me!.id, newId(), send, { ...send, costPerKgPaisa: Math.round((p * 1000) / grams) });
+      router.back();
+      return;
+    }
+    const common = { date: date!, category: category as ExpenseCategory, amountPaisa: p, description: desc.trim() || null, method, animalId: animalId === 'none' ? null : animalId };
     let id = params.id;
     if (id) {
       await local().repo.update('Expense', me!.id, id, { ...common, ...(photo.remove ? { receiptPhotoId: null } : {}) });
@@ -82,17 +110,56 @@ export default function ExpenseForm() {
       { text: t('delete'), style: 'destructive', onPress: async () => { await local().repo.remove('Expense', me!.id, params.id!); router.back(); } },
     ]);
 
+  const categories: Category[] = fixed ? [...EXPENSE_CATEGORIES] : can('feed', 'add') ? ['FEED', ...EXPENSE_CATEGORIES] : [...EXPENSE_CATEGORIES];
+  const supplierChoice = (
+    <Choice
+      label={t('fromSupplier')}
+      value={supplierId}
+      onChange={(v) => !fixed && setSupplierId(v)}
+      options={[{ value: 'none', label: t('none') }, ...d.suppliers.filter((s) => s.data.active || s.id === supplierId).map((s) => ({ value: s.id, label: s.data.name }))]}
+    />
+  );
+
   return (
     <Screen>
-      <Choice label={t('category')} value={category} onChange={(c) => editable && setCategory(c)} options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`ec_${c}`) }))} />
-      <Field label={t('amount')} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" editable={editable} />
+      <Choice label={t('expenseType')} value={category} onChange={(c) => editable && setCategory(c)} options={categories.map((c) => ({ value: c, label: c === 'FEED' ? `🌾 ${t('ec_FEED')}` : t(`ec_${c}`) }))} />
+
+      {isFeed ? (
+        <>
+          {items.length === 0 ? <Muted>{t('noFeedTypesHelp')}</Muted> : null}
+          <Choice label={t('feedType')} value={itemId} onChange={setItemId} options={items.map((i) => ({ value: i.id, label: i.data.name }))} />
+          <Button title={`+ ${t('addFeedType')}`} variant="ghost" onPress={() => router.push('/feed/item')} />
+          {item?.bagWeightGrams ? (
+            <Choice label={t('unit')} value={unit} onChange={setUnit} options={[{ value: 'bag', label: `${t('byBag')} (${kg(item.bagWeightGrams)} ${t('kgUnit')})` }, { value: 'kg', label: t('byKg') }]} />
+          ) : null}
+          <Field label={`${t('howMuch')} (${useUnit === 'bag' ? t('bags') : t('kgUnit')})`} value={qty} onChangeText={setQty} keyboardType="decimal-pad" />
+          <Field label={t('totalPrice')} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" />
+          {grams ? (
+            <Card>
+              <InfoLine label={t('kgUnit')} value={kg(grams)} />
+              {parseRupees(amount) && typeof parseRupees(amount) === 'number' ? <InfoLine label={t('avgPrice')} value={`${formatPKR(Math.round(((parseRupees(amount) as number) * 1000) / grams))}/${t('kgUnit')}`} /> : null}
+            </Card>
+          ) : null}
+        </>
+      ) : (
+        <Field label={t('amount')} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" editable={editable} />
+      )}
+
       <DateField label={t('date')} value={date} onChange={(x) => editable && setDate(x)} />
-      <Field label={`${t('description')} (${t('optional')})`} value={desc} onChangeText={setDesc} editable={editable} />
-      <Choice label={t('supplierOptional')} value={supplierId} onChange={(v) => !fixed && setSupplierId(v)} options={[{ value: 'none', label: t('none') }, ...d.suppliers.filter((s) => s.data.active || s.id === supplierId).map((s) => ({ value: s.id, label: s.data.name }))]} />
       <Choice label={t('paymentType')} value={payType} onChange={(v) => !fixed && setPayType(v)} options={[{ value: 'CASH', label: t('paidNow') }, { value: 'CREDIT', label: t('onCredit') }]} />
-      {payType === 'CASH' ? <Choice label={t('method')} value={method} onChange={(m) => editable && setMethod(m)} options={PAYMENT_METHODS.map((m) => ({ value: m, label: t(`pm_${m}`) }))} /> : null}
-      <Choice label={t('forAnimal')} value={animalId} onChange={(v) => editable && setAnimalId(v)} options={[{ value: 'none', label: t('none') }, ...d.animals.filter((a) => isActive(a.status) || a.animal.id === animalId).map((a) => ({ value: a.animal.id, label: `#${a.animal.tag}` }))]} />
-      {editable ? <PhotoPicker label={t('receipt')} savedId={rec?.data.receiptPhotoId ?? null} state={photo} onChange={setPhoto} /> : null}
+      {payType === 'CREDIT' ? supplierChoice : null}
+      <Field label={`${t('description')} (${t('optional')})`} value={desc} onChangeText={setDesc} editable={editable} />
+
+      {!isFeed ? (
+        <>
+          {payType === 'CASH' ? <Choice label={t('method')} value={method} onChange={(m) => editable && setMethod(m)} options={PAYMENT_METHODS.map((m) => ({ value: m, label: t(`pm_${m}`) }))} /> : null}
+          <Choice label={t('forAnimal')} value={animalId} onChange={(v) => editable && setAnimalId(v)} options={[{ value: 'none', label: t('none') }, ...d.animals.filter((a) => isActive(a.status) || a.animal.id === animalId).map((a) => ({ value: a.animal.id, label: `#${a.animal.tag}` }))]} />
+          {editable ? <PhotoPicker label={t('receipt')} savedId={rec?.data.receiptPhotoId ?? null} state={photo} onChange={setPhoto} /> : null}
+        </>
+      ) : (
+        <Muted>{t('feedExpenseHelp')}</Muted>
+      )}
+
       {fixed ? <Muted>{t('expenseFixedFields')}</Muted> : null}
       {error ? <Notice tone="bad" text={error} /> : null}
       {editable ? <Button title={t('save')} onPress={save} busy={saving} /> : null}

@@ -51,10 +51,14 @@ export function monthBounds(month: string) {
 
 /** Days in the period with milking cows on the farm but no feeding recorded. */
 export function daysWithoutFeeding(d: ReportData, from: string, to: string): number {
-  const fedDays = new Set(d.consumptions.filter((c) => !c.deletedAt).map((c) => c.date));
+  const live = d.consumptions.filter((c) => !c.deletedAt);
+  const fedDays = new Set(live.map((c) => c.date));
+  // A monthly total covers every day of its month.
+  const monthsCovered = new Set(live.filter((c) => c.period === 'MONTH').map((c) => c.date.slice(0, 7)));
   let n = 0;
   for (let t = Date.parse(`${from}T00:00:00Z`); t <= Date.parse(`${to}T00:00:00Z`); t += 86400_000) {
     const day = new Date(t).toISOString().slice(0, 10);
+    if (monthsCovered.has(day.slice(0, 7))) continue;
     if (!fedDays.has(day) && milkingOn(d.animals, day).length > 0) n++;
   }
   return n;
@@ -122,7 +126,6 @@ export function monthReport(d: ReportData, month: string): MonthReport {
   if (!ms.complete) warnings.push('MILK_INCOMPLETE');
   if (noFeedDays > 0) warnings.push('FEED_DAYS_MISSING');
   if (fe.unpricedGrams > 0) warnings.push('FEED_UNPRICED');
-  if (!d.settings?.openingCashDate) warnings.push('NO_OPENING_CASH');
 
   return {
     month, from: b.from, to: b.to, inProgress: b.inProgress,

@@ -38,8 +38,8 @@ export default function AppLayout() {
         <Stack.Screen name="sales/payment" options={{ title: t('receivePayment') }} />
         <Stack.Screen name="sales/delivery" options={{ title: t('editDelivery') }} />
         <Stack.Screen name="feed/index" options={{ title: t('feed') }} />
-        <Stack.Screen name="feed/items" options={{ title: t('feedItems') }} />
-        <Stack.Screen name="feed/item" options={{ title: t('addFeedItem') }} />
+        <Stack.Screen name="feed/items" options={{ title: t('feedTypes') }} />
+        <Stack.Screen name="feed/item" options={{ title: t('addFeedType') }} />
         <Stack.Screen name="feed/suppliers/index" options={{ title: t('suppliers') }} />
         <Stack.Screen name="feed/suppliers/[id]" options={{ title: t('supplier') }} />
         <Stack.Screen name="feed/supplier" options={{ title: t('addSupplier') }} />
@@ -48,7 +48,9 @@ export default function AppLayout() {
         <Stack.Screen name="feed/feeding" options={{ title: t('recordFeeding') }} />
         <Stack.Screen name="feed/log" options={{ title: t('feedingLog') }} />
         <Stack.Screen name="feed/stock-count" options={{ title: t('stockCount') }} />
-        <Stack.Screen name="money/index" options={{ title: t('money') }} />
+        <Stack.Screen name="feed/record" options={{ title: t('recordFeeding') }} />
+        <Stack.Screen name="feed/monthly" options={{ title: t('monthlyFeeding') }} />
+        <Stack.Screen name="money/index" options={{ title: t('expenses') }} />
         <Stack.Screen name="money/expense" options={{ title: t('addExpense') }} />
         <Stack.Screen name="money/expenses" options={{ title: t('expenses') }} />
         <Stack.Screen name="money/capital" options={{ title: t('addCapital') }} />

@@ -21,6 +21,8 @@ export interface MilkUsage {
   type: MilkUsageType;
   quantityMl: number;
   animalId: string | null;
+  /** Set when entered on the milking screen. */
+  session?: MilkSession | null;
   note: string | null;
   deletedAt: string | null;
 }
@@ -172,3 +174,28 @@ export async function saveMilkSession(
 }
 
 export const litres = (ml: number) => (ml / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+/**
+ * Milk from one milking that was not sold: fed to calves, used at home, thrown away.
+ * Entered on the milking screen; one entry per type and milking (changed or removed when edited).
+ */
+export async function saveSessionUsage(
+  repo: LocalRepo,
+  userId: string,
+  newId: () => string,
+  date: string,
+  session: MilkSession,
+  amounts: Partial<Record<MilkUsageType, number | null>>,
+  existing: LocalRecord<MilkUsage>[],
+) {
+  for (const [type, ml] of Object.entries(amounts) as [MilkUsageType, number | null][]) {
+    const cur = existing.find((u) => u.data.date === date && u.data.session === session && u.data.type === type && !u.data.animalId && !u.data.deletedAt);
+    if (!ml) {
+      if (cur) await repo.remove('MilkUsage', userId, cur.id);
+    } else if (!cur) {
+      await repo.create('MilkUsage', userId, newId(), { date, type, quantityMl: ml, animalId: null, session, note: null });
+    } else if (cur.data.quantityMl !== ml) {
+      await repo.update('MilkUsage', userId, cur.id, { quantityMl: ml });
+    }
+  }
+}

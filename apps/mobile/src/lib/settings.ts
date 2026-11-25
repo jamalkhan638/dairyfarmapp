@@ -1,5 +1,16 @@
-import * as SecureStore from 'expo-secure-store';
+import * as NativeSecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+
+/** Android: the phone's secure storage. Web preview only: the browser's storage. */
+const SecureStore =
+  Platform.OS === 'web'
+    ? {
+        getItemAsync: async (k: string) => globalThis.localStorage?.getItem(k) ?? null,
+        setItemAsync: async (k: string, v: string) => globalThis.localStorage?.setItem(k, v),
+        deleteItemAsync: async (k: string) => globalThis.localStorage?.removeItem(k),
+      }
+    : NativeSecureStore;
 
 /** Small values kept in the phone's secure storage (survive app restarts). */
 const KEYS = { server: 'serverUrl', session: 'session', language: 'language' } as const;

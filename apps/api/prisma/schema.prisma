@@ -296,6 +296,8 @@ model MilkUsage {
   type       MilkUsageType
   quantityMl Int
   animalId   String?       @db.Uuid
+  /// Set when entered on the milking screen (morning/evening).
+  session    MilkSession?
   note       String?
 
   version         Int       @default(1)
@@ -529,6 +531,8 @@ model FeedConsumption {
   quantityGrams Int
   wastedGrams   Int      @default(0)
   animalIds     String[] @db.Uuid
+  /// DAY = fed on this date; MONTH = total used in this date's month (entered at month end).
+  period        String   @default("DAY")
   note          String?
 
   version         Int       @default(1)

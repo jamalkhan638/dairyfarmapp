@@ -52,16 +52,13 @@ export default function OpeningBalance() {
   };
   return (
     <Screen>
-      <Muted>{t('openingHelp')}</Muted>
-      <Field label={t('openingCash')} value={amount} onChangeText={setAmount} keyboardType="numbers-and-punctuation" />
-      <DateField label={t('openingCashDate')} value={date} onChange={setDate} />
       <Field label={`${t('farmName')} (${t('optional')})`} value={farmName} onChangeText={setFarmName} />
       <Section>{t('breeding')}</Section>
       <Field label={t('gestationDays')} value={gest} onChangeText={setGest} keyboardType="number-pad" hint={t('gestationHint')} />
       <Field label={t('pregnancyCheckDays')} value={check} onChangeText={setCheck} keyboardType="number-pad" />
       <Field label={t('heatRepeatDays')} value={heat} onChangeText={setHeat} keyboardType="number-pad" />
       {error ? <Notice tone="bad" text={error} /> : null}
-      <Button title={t('save')} onPress={save} disabled={!date} />
+      <Button title={t('save')} onPress={save} />
       <Section>{t('history')}</Section>
       <HistoryList entity="FarmSettings" id={FARM_SETTINGS_ID} />
     </Screen>

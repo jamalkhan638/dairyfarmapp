@@ -73,6 +73,8 @@ export const milkUsageCreate = z.object({
   quantityMl: z.number().int().positive().max(1_000_000),
   /** Optional: which cow's milk was discarded, or which calf was fed. */
   animalId: uuid.nullable().optional(),
+  /** Set when entered together with a milking (morning/evening). */
+  session: z.enum(MILK_SESSIONS).nullable().optional(),
   note: optionalText(500),
 });
 export const milkUsageUpdate = milkUsageCreate.partial();
@@ -203,6 +205,8 @@ export const feedConsumptionCreate = z.object({
   wastedGrams: z.number().int().min(0).max(MAX_GRAMS).default(0),
   /** The animals that shared this feed. One animal = individual feeding. */
   animalIds: z.array(uuid).min(1).max(500),
+  /** DAY = fed on this date. MONTH = everything used in this date's month (entered at month end). */
+  period: z.enum(['DAY', 'MONTH']).default('DAY'),
   note: optionalText(500),
 }).refine((v) => v.quantityGrams + v.wastedGrams > 0, { message: 'Enter the kg fed or wasted' });
 export const feedConsumptionUpdate = z.object({

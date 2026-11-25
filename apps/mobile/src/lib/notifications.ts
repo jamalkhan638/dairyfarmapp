@@ -10,9 +10,11 @@ import i18n from './i18n';
 const CHANNEL = 'reminders';
 let ready: Promise<boolean> | null = null;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  });
+}
 
 /** Ask once for permission; reminders still show inside the app if the user says no. */
 function prepare(): Promise<boolean> {
@@ -43,7 +45,7 @@ function eightAm(date: string) {
  * next 30 days, listing that day's reminders. Rebuilt whenever records change.
  */
 export async function scheduleReminderNotifications() {
-  if (!(await prepare())) return;
+  if (Platform.OS === 'web' || !(await prepare())) return;
   try {
     const repo = local().repo;
     const [animals, h] = await Promise.all([loadAnimals(repo), loadHealth(repo)]);

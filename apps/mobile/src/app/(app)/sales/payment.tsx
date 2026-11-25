@@ -10,7 +10,7 @@ import { balances, parseRupees } from '../../../domain/sales';
 import { formatPKR, today } from '../../../lib/format';
 import { RecordMeta } from '../../../components/RecordMeta';
 import { HistoryList } from '../../../components/HistoryList';
-import { Button, Choice, DateField, Field, InfoLine, Card, Notice, Screen, Section } from '../../../components/ui';
+import { Body, Button, Choice, DateField, Field, InfoLine, Card, Notice, Screen, Section } from '../../../components/ui';
 
 /** Money received from a customer. Any amount: partial payments and advances are fine. */
 export default function PaymentForm() {
@@ -42,6 +42,16 @@ export default function PaymentForm() {
 
   if (!can('sales', params.id ? 'view' : 'add')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   if (!data) return <Screen>{null}</Screen>;
+  if (!params.id && data.customers.filter((c) => c.data.active).length === 0) {
+    return (
+      <Screen>
+        <Card>
+          <Body style={{ fontSize: 20, fontWeight: '700' }}>👥 {t('addCustomerFirst')}</Body>
+          {can('sales', 'add') ? <Button title={t('addCustomer')} onPress={() => router.replace('/sales/customer')} /> : null}
+        </Card>
+      </Screen>
+    );
+  }
   const linked = !!rec?.data.deliveryId;
   const readOnly = linked || (!!params.id && !can('sales', 'edit'));
   const bal = customerId ? balances(data.deliveries.map((d) => d.data), data.payments.map((p) => p.data)).get(customerId)?.balancePaisa ?? 0 : null;

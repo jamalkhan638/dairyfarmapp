@@ -8,7 +8,6 @@ import { today } from '../lib/format';
 import { AnimalPhoto } from './AnimalPhoto';
 import { Button, Choice, DateField, Field, Notice, Row, Toggle } from './ui';
 import { Image } from 'expo-image';
-import { useSession } from '../lib/session';
 
 export interface AnimalFormValue {
   form: Form;
@@ -35,7 +34,6 @@ export function AnimalFormView({
   error: string | null;
   onSubmit: (v: AnimalFormValue) => void;
 }) {
-  const canFinance = useSession().can('finance', 'add');
   const { t } = useTranslation();
   const [form, setForm] = useState<Form>(initialForm);
   const [price, setPrice] = useState(initialForm.purchasePricePaisa != null ? String(paisaToRupees(initialForm.purchasePricePaisa)) : '');
@@ -43,7 +41,7 @@ export function AnimalFormView({
   const [statusDate, setStatusDate] = useState<string | null>(today());
   const [newPhoto, setNewPhoto] = useState<{ uri: string; size: number } | null>(null);
   const [removePhoto, setRemovePhoto] = useState(false);
-  const [addToCashBook, setAddToCashBook] = useState(true);
+  const addToCashBook = false; // no cash book in this version
   const set = <K extends keyof Form>(k: K) => (v: Form[K]) => setForm((p) => ({ ...p, [k]: v }));
   const text = (k: 'name' | 'breed' | 'notes' | 'tag') => (v: string) => set(k)(v === '' && k !== 'tag' ? null : v);
 
@@ -83,7 +81,6 @@ export function AnimalFormView({
       <Toggle label={t('birthDateEstimated')} value={form.birthDateEstimated} onChange={set('birthDateEstimated')} />
       <DateField label={`${t('purchaseDate')} (${t('optional')})`} value={form.purchaseDate ?? null} onChange={set('purchaseDate')} allowEmpty />
       <Field label={`${t('purchasePrice')} (${t('optional')})`} value={price} onChangeText={setPrice} keyboardType="numeric" />
-      {isNew && price.trim() !== '' && canFinance ? <Toggle label={t('addToCashBook')} value={addToCashBook} onChange={setAddToCashBook} /> : null}
       <Field label={`${t('notes')} (${t('optional')})`} value={form.notes ?? ''} onChangeText={text('notes')} multiline />
 
       <Row>

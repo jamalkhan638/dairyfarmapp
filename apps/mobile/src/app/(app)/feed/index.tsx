@@ -3,12 +3,12 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../../../lib/session';
 import { useFeedData } from '../../../lib/use-feed';
-import { averageCostPerKg, bagsText, feedExpense, kg, stockByItem, supplierBalances } from '../../../domain/feed';
+import { bagsText, feedExpense, kg, stockByItem } from '../../../domain/feed';
 import { formatPKR, today } from '../../../lib/format';
 import { monthRange } from '../../../lib/months';
-import { Badge, Body, Button, Card, InfoLine, Muted, Notice, Row, Screen, Section } from '../../../components/ui';
+import { Body, Button, Card, InfoLine, Muted, Notice, Row, Screen, Section } from '../../../components/ui';
 
-/** Feed overview: what is in store, this month's feed expense, and shortcuts. */
+/** Feed: buy feed, record feeding (monthly or daily), and what is in the store. */
 export default function FeedHome() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -17,64 +17,58 @@ export default function FeedHome() {
   if (!can('feed', 'view')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   if (!data) return <Screen>{null}</Screen>;
   const P = data.purchases.map((x) => x.data);
-  const stock = stockByItem(P, data.consumptions.map((x) => x.data), data.adjustments.map((x) => x.data));
+  const C = data.consumptions.map((x) => x.data);
+  const stock = stockByItem(P, C, data.adjustments.map((x) => x.data));
   const { from, to } = monthRange(today().slice(0, 7));
-  const exp = feedExpense(data.consumptions.map((x) => x.data), P, from, to);
-  const owed = [...supplierBalances(P, data.payments.map((x) => x.data), data.expenses).values()].reduce((s, b) => s + Math.max(0, b.balancePaisa), 0);
+  const exp = feedExpense(C, P, from, to);
+  const boughtPaisa = P.filter((p) => !p.deletedAt && p.date >= from && p.date <= to).reduce((s, p) => s + p.totalPaisa, 0);
+  const monthlyDone = C.some((c) => !c.deletedAt && c.period === 'MONTH' && c.date.slice(0, 7) === today().slice(0, 7));
+  const items = data.items.filter((i) => i.data.active);
 
   return (
     <Screen>
+      {items.length === 0 ? (
+        <Card>
+          <Body style={{ fontSize: 18, fontWeight: '700' }}>🌾 {t('noFeedTypesHelp')}</Body>
+          {can('feed', 'add') ? <Button title={t('addFeedType')} onPress={() => router.push('/feed/item')} /> : null}
+        </Card>
+      ) : null}
+
       {can('feed', 'add') ? (
-        <>
-          <Button title={t('recordFeeding')} onPress={() => router.push('/feed/feeding')} />
-          <Row>
-            <Button title={t('addPurchase')} variant="secondary" onPress={() => router.push('/feed/purchase')} style={{ flex: 1 }} />
-            <Button title={t('paySupplier')} variant="secondary" onPress={() => router.push('/feed/supplier-payment')} style={{ flex: 1 }} />
-          </Row>
-        </>
+        <Row>
+          <Button title={`🛒 ${t('addPurchase')}`} onPress={() => router.push({ pathname: '/money/expense', params: { category: 'FEED' } })} style={{ flex: 1, minHeight: 64 }} />
+          <Button title={`🐄 ${t('recordFeeding')}`} onPress={() => router.push('/feed/record')} style={{ flex: 1, minHeight: 64 }} />
+        </Row>
       ) : null}
 
       <Card>
-        <Row style={{ justifyContent: 'space-between' }}>
-          <Section>{t('feedExpense')} · {t('thisMonth')}</Section>
-          <Badge text={t('inProgress')} tone="info" />
-        </Row>
-        <Body style={{ fontSize: 26, fontWeight: '800' }}>{formatPKR(exp.costPaisa)}</Body>
-        <Muted>{t('kgFed')}: {kg(exp.fedGrams)} · {t('kgWasted')}: {kg(exp.wastedGrams)}</Muted>
-        {exp.unpricedGrams ? <Notice tone="warn" text={t('unpricedFeed', { kg: kg(exp.unpricedGrams) })} /> : null}
-        <Muted>{t('feedExpenseNote')}</Muted>
+        <Section>{t('thisMonth')}</Section>
+        <InfoLine label={t('feedBoughtThisMonth')} value={formatPKR(boughtPaisa)} />
+        <InfoLine label={t('feedUsed')} value={formatPKR(exp.costPaisa)} />
+        {!monthlyDone && exp.costPaisa === 0 ? <Muted>{t('monthlyNotEntered')}</Muted> : null}
       </Card>
 
-      <Section>{t('stock')}</Section>
-      {data.items.length === 0 ? <Muted>{t('noFeedItems')}</Muted> : null}
-      {data.items.filter((i) => i.data.active).map((i) => {
+      {items.length ? <Section>{t('stock')}</Section> : null}
+      {items.map((i) => {
         const g = stock.get(i.id) ?? 0;
         const bags = bagsText(g, i.data.bagWeightGrams);
-        const avg = averageCostPerKg(P, i.id, today());
         return (
           <Card key={i.id} onPress={() => router.push({ pathname: '/feed/item', params: { id: i.id } })}>
             <Row style={{ justifyContent: 'space-between' }}>
               <Body style={{ fontWeight: '800', fontSize: 18, flexShrink: 1 }}>{i.data.name}</Body>
               <Body style={{ fontWeight: '800' }}>{kg(g)} {t('kgUnit')}</Body>
             </Row>
-            <Muted>
-              {t(`fc_${i.data.category}`)}
-              {bags ? ` · ${bags.bags} ${t('bags')}${bags.restGrams ? ` + ${kg(bags.restGrams)} ${t('kgUnit')}` : ''}` : ''}
-              {avg !== null ? ` · ${t('avgPrice')} ${formatPKR(avg)}/${t('kgUnit')}` : ''}
-            </Muted>
+            {bags ? <Muted>{bags.bags} {t('bags')}{bags.restGrams ? ` + ${kg(bags.restGrams)} ${t('kgUnit')}` : ''}</Muted> : null}
             {g < 0 ? <Notice tone="warn" text={t('stockNegative')} /> : null}
           </Card>
         );
       })}
-      <Card>
-        <InfoLine label={t('supplierTotalOwed')} value={formatPKR(owed)} />
-      </Card>
-      <Button title={t('feedingLog')} variant="secondary" onPress={() => router.push('/feed/log')} />
-      <Button title={t('suppliers')} variant="secondary" onPress={() => router.push('/feed/suppliers')} />
+
       <Row>
-        <Button title={t('feedItems')} variant="secondary" onPress={() => router.push('/feed/items')} style={{ flex: 1 }} />
-        {can('feed', 'edit') ? <Button title={t('stockCount')} variant="secondary" onPress={() => router.push('/feed/stock-count')} style={{ flex: 1 }} /> : null}
+        <Button title={t('feedTypes')} variant="secondary" onPress={() => router.push('/feed/items')} style={{ flex: 1 }} />
+        <Button title={t('suppliers')} variant="secondary" onPress={() => router.push('/feed/suppliers')} style={{ flex: 1 }} />
       </Row>
+      <Button title={t('feedingLog')} variant="ghost" onPress={() => router.push('/feed/log')} />
     </Screen>
   );
 }

@@ -39,6 +39,16 @@ export default function DeliveryRound() {
 
   if (!can('sales', 'add')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   if (!data) return <Screen>{null}</Screen>;
+  if (data.customers.filter((c) => c.data.active).length === 0) {
+    return (
+      <Screen>
+        <View style={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 16, gap: 12 }}>
+          <Body style={{ fontSize: 20, fontWeight: '700' }}>👥 {t('addCustomerFirst')}</Body>
+          <Button title={t('addCustomer')} onPress={() => router.replace('/sales/customer')} />
+        </View>
+      </Screen>
+    );
+  }
   const rates = data.rates.map((r) => r.data);
   const withEntry = new Set(existing.map((d) => d.data.customerId));
   const customers = data.customers.filter((c) => c.data.active || withEntry.has(c.id));

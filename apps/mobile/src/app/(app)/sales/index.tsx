@@ -36,7 +36,12 @@ export default function Sales() {
           <Button title={t('receivePayment')} variant="secondary" onPress={() => router.push('/sales/payment')} />
         </>
       ) : null}
-      {list.length === 0 ? <Muted>{t('noCustomers')}</Muted> : null}
+      {data.customers.length === 0 ? (
+        <Card>
+          <Body style={{ fontSize: 20, fontWeight: '700' }}>👥 {t('addCustomerFirst')}</Body>
+          {can('sales', 'add') ? <Button title={t('addCustomer')} onPress={() => router.push('/sales/customer')} /> : null}
+        </Card>
+      ) : null}
       {list.map((c) => {
         const r = rateOn(data.rates.map((x) => x.data), c.id, today());
         const b = bal.get(c.id)?.balancePaisa ?? 0;

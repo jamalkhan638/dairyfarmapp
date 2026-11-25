@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { CAPITAL_TYPES, EXPENSE_CATEGORIES, MILK_USAGE_TYPES } from '@dairy/shared';
+import { EXPENSE_CATEGORIES, MILK_USAGE_TYPES } from '@dairy/shared';
 import { useSession } from '../../../lib/session';
 import { useReportData } from '../../../lib/use-reports';
 import { monthReport, perCow, trend } from '../../../domain/reports';
@@ -90,23 +90,6 @@ export default function Reports() {
             <InfoLine label={t('total')} value={formatPKR(r.expenses.totalPaisa)} />
           </Card>
 
-          {can('finance', 'view') ? (
-            <Card onPress={() => router.push('/money/cashbook')}>
-              <Section>{t('cashSeparate')}</Section>
-              <InfoLine label={t('balanceStart')} value={formatPKR(r.cash.startPaisa)} />
-              <InfoLine label={t('moneyIn')} value={formatPKR(r.cash.inPaisa)} />
-              <InfoLine label={t('moneyOut')} value={formatPKR(r.cash.outPaisa)} />
-              <InfoLine label={t('balanceEnd')} value={formatPKR(r.cash.endPaisa)} />
-              <Muted>{t('cashNotProfit')}</Muted>
-            </Card>
-          ) : null}
-
-          {Object.keys(r.capital).length ? (
-            <Card>
-              <Section>{t('capitalThisMonth')}</Section>
-              {CAPITAL_TYPES.filter((c) => r.capital[c]).map((c) => <InfoLine key={c} label={t(`ct_${c}`)} value={formatPKR(r.capital[c]!)} />)}
-            </Card>
-          ) : null}
         </>
       ) : null}
 
