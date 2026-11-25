@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { MILK_USAGE_TYPES } from '@dairy/shared';
@@ -9,6 +10,7 @@ import { local, newId } from '../../../lib/db';
 import { litres, summarizeDay } from '../../../domain/milk';
 import { formatDate, today } from '../../../lib/format';
 import { Badge, Body, Button, Card, DateField, InfoLine, Muted, Notice, Row, Screen, Section } from '../../../components/ui';
+import { colors } from '../../../lib/theme';
 
 /** Milk: one big "Record milk" button, then the day's summary. */
 export default function MilkDay() {
@@ -24,6 +26,11 @@ export default function MilkDay() {
   const s = summarizeDay(date, data.animals, data.records.map((r) => r.data), data.usages.map((u) => u.data), data.soldByDate?.[date] ?? 0);
   const L = (ml: number) => `${litres(ml)} ${t('L')}`;
   const dayUsages = data.usages.filter((u) => u.data.date === date);
+  // Every milk entry of the day, morning first, then by cow tag.
+  const tagOf = (id: string) => data.animals.find((x) => x.animal.id === id)?.animal.tag ?? '';
+  const dayRecords = data.records
+    .filter((r) => r.data.date === date)
+    .sort((a, b) => (a.data.session === b.data.session ? tagOf(a.data.animalId).localeCompare(tagOf(b.data.animalId), undefined, { numeric: true }) : a.data.session === 'MORNING' ? -1 : 1));
   // Milk from cows under withdrawal that day, minus what was already recorded as discarded for them.
   const withdrawalMilk = data.animals
     .map((a) => {
@@ -63,6 +70,67 @@ export default function MilkDay() {
       </Card>
       {data.soldByDate && s.remainingMl < 0 ? <Notice tone="warn" text={t('remainingNegative')} /> : null}
 
+      <Section>{t('dayEntries')}</Section>
+      {dayRecords.length === 0 && dayUsages.length === 0 ? <Muted>{t('noMilkEntries')}</Muted> : null}
+      {dayRecords.length ? (
+        <Card>
+          {dayRecords.map((r) => {
+            const a = data.animals.find((x) => x.animal.id === r.data.animalId)?.animal;
+            const label = `${r.data.session === 'MORNING' ? '☀️' : '🌙'} #${a?.tag ?? '?'}${a?.name ? ` ${a.name}` : ''}`;
+            return (
+              <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <View style={{ flex: 1 }}>
+                  <Body style={{ fontWeight: '700' }}>{label}</Body>
+                  {r.syncState !== 'synced' ? <Badge text={t(r.syncState === 'pending' ? 'statePending' : 'stateConflict')} tone={r.syncState === 'pending' ? 'warn' : 'bad'} /> : null}
+                </View>
+                <Body style={{ fontWeight: '800' }}>{L(r.data.quantityMl)}</Body>
+                {can('milk', 'edit') ? (
+                  <IconButton icon="✏️" label={t('edit')} onPress={() => router.push({ pathname: '/milk/entry', params: { date, session: r.data.session } })} />
+                ) : null}
+                {can('milk', 'delete') ? (
+                  <IconButton
+                    icon="🗑"
+                    label={t('delete')}
+                    onPress={() =>
+                      Alert.alert(t('deleteMilkQ'), `${label} · ${L(r.data.quantityMl)} · ${formatDate(date)}`, [
+                        { text: t('cancel'), style: 'cancel' },
+                        { text: t('delete'), style: 'destructive', onPress: () => local().repo.remove('MilkRecord', me!.id, r.id) },
+                      ])
+                    }
+                  />
+                ) : null}
+              </View>
+            );
+          })}
+        </Card>
+      ) : null}
+      {dayUsages.length ? (
+        <Card>
+          {dayUsages.map((u) => {
+            const tag = u.data.animalId ? data.animals.find((x) => x.animal.id === u.data.animalId)?.animal.tag : null;
+            const label = `${u.data.session === 'MORNING' ? '☀️ ' : u.data.session === 'EVENING' ? '🌙 ' : ''}${t(`u_${u.data.type}`)}${tag ? ` · #${tag}` : ''}`;
+            return (
+              <View key={u.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <Body style={{ flex: 1 }}>{label}</Body>
+                <Body style={{ fontWeight: '800' }}>{L(u.data.quantityMl)}</Body>
+                {can('milk', 'delete') ? (
+                  <IconButton
+                    icon="🗑"
+                    label={t('delete')}
+                    onPress={() =>
+                      Alert.alert(t('deleteUsageQ'), `${label} · ${L(u.data.quantityMl)} · ${formatDate(date)}`, [
+                        { text: t('cancel'), style: 'cancel' },
+                        { text: t('delete'), style: 'destructive', onPress: () => local().repo.remove('MilkUsage', me!.id, u.id) },
+                      ])
+                    }
+                  />
+                ) : null}
+              </View>
+            );
+          })}
+        </Card>
+      ) : null}
+
       {withdrawalMilk.length ? (
         <Card>
           <Body style={{ fontWeight: '700' }}>{t('withdrawalToday')}</Body>
@@ -92,5 +160,19 @@ export default function MilkDay() {
       <Button title={t('monthly')} variant="secondary" onPress={() => router.push({ pathname: '/milk/month', params: { month: date.slice(0, 7) } })} />
       {can('milk', 'add') ? <Button title={`+ ${t('addUsage')}`} variant="ghost" onPress={() => router.push({ pathname: '/milk/usage', params: { date } })} /> : null}
     </Screen>
+  );
+}
+
+/** Small square button with an icon (edit / delete). */
+function IconButton({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [{ width: 44, height: 44, borderRadius: 10, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card }, pressed && { opacity: 0.7 }]}
+    >
+      <Text style={{ fontSize: 20 }}>{icon}</Text>
+    </Pressable>
   );
 }
