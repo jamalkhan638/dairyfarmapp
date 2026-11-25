@@ -30,7 +30,7 @@ export default function AppLayout() {
         <Stack.Screen name="milk/entry" options={{ title: t('recordMilk') }} />
         <Stack.Screen name="milk/usage" options={{ title: t('addUsage') }} />
         <Stack.Screen name="milk/month" options={{ title: t('monthly') }} />
-        <Stack.Screen name="sales/index" options={{ title: t('sales') }} />
+        <Stack.Screen name="sales/index" options={{ title: t('customers') }} />
         <Stack.Screen name="sales/round" options={{ title: t('deliveryRound') }} />
         <Stack.Screen name="sales/customer" options={{ title: t('addCustomer') }} />
         <Stack.Screen name="sales/[id]" options={{ title: t('customer') }} />
