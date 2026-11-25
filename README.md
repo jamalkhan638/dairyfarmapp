@@ -91,9 +91,20 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - 6-month trend of profit, milk, sales, feed and expenses
 - An automatic check that every text exists in both English and Urdu
 
+**Phase 8 – Release & backups: done**
+- Owner sees backup status in Settings → Backups (last success, warning if older than 36 hours or failed) and can tap **Back up now**
+- Nightly backups (database + photos), 30 daily + 12 monthly; `deploy/restore.sh` restores a date safely (saves the current data first, makes phones re-download)
+- Restore drill passed: backup → empty database → every table matched, photos back, server ran on the restored data
+- After a restore, phones download everything again and resend unsent entries (tested with the real sync engine)
+- Login lock: 5 wrong passwords for a username → locked for 15 minutes
+- Server build steps checked exactly as Docker runs them (clean install, migrations on an empty database, start, owner setup)
+- Android APK build set up with EAS Build (`apps/mobile/eas.json`, profile `apk`)
+
+**Deploy guide: [deploy/DEPLOY.md](deploy/DEPLOY.md)**: server, APK, phones, backups, updates, restore.
+
 Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
 
-Next phase: Release & backups (installable APK, backup/restore drill, deployment) → Health & breeding → Reports → Release & backups.
+All 8 phases of version one are complete. → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
 
@@ -131,7 +142,7 @@ Automated (needs a `dairy_test` database: `createdb dairy_test`):
 ```bash
 npm test
 ```
-90 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
+93 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
 
 By hand on a phone:
 1. **Owner + worker.** As owner: Settings → Users → Add user. Give the worker Animals: See + Add + Edit, but not Delete. Log in as the worker on a second phone.

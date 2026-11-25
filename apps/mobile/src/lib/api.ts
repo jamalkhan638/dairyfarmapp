@@ -130,6 +130,13 @@ class Api implements SyncApi {
     return this.request<void>(`/users/${id}/password`, { method: 'POST', body: { password } });
   }
 
+  backupStatus() {
+    return this.request<{ available: boolean; lastSuccess: string | null; lastError: string | null; requested: boolean; latest: { name: string; sizeBytes: number }[] }>('/admin/backup');
+  }
+  requestBackup() {
+    return this.request<{ requested: boolean }>('/admin/backup', { method: 'POST' });
+  }
+
   history(entity: string, id: string) {
     return this.request<AuditEntry[]>(`/history/${entity}/${id}`);
   }

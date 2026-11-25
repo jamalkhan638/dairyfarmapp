@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import { emptyPermissionMap } from '@dairy/shared';
 import { createApp, resetDb } from './helpers';
 import { Phone, login as loginAs } from './phone';
+import { PrismaService } from '../src/prisma/prisma.service';
 import { addAnimal, changeStatus, loadAnimals } from '../../mobile/src/domain/animals';
 
 const login = (u: string, p: string) => loginAs(app, u, p);
@@ -168,4 +169,22 @@ it('a response lost on the way back does not create a duplicate', async () => {
   expect(lostPhone.engine.status).toMatchObject({ pending: 0, conflicts: 0, rejected: 0 });
   await owner.sync();
   expect((await loadAnimals(owner.repo)).filter((a) => a.animal.tag === '309')).toHaveLength(1);
+});
+
+it('after a server restore, phones download everything again and resend what was not on the server', async () => {
+  // A phone has synced; then the server is "restored" to an older state (simulated: its download position jumps back and keys change).
+  await worker.sync();
+  const before = (await loadAnimals(worker.repo)).length;
+  worker.online = false;
+  await addAnimal(worker.repo, worker.userId, randomUUID, { tag: 'AFTER-RESTORE', sex: 'FEMALE', birthDateEstimated: false }, { status: 'MILKING', date: '2026-11-04' });
+  worker.online = true;
+  // What restore.sh does after putting back the database:
+  const prisma = app.get(PrismaService);
+  await prisma.$executeRawUnsafe('UPDATE "User" SET "accessVersion" = "accessVersion" + 1000');
+  await worker.repo.setMeta('cursor', '999999'); // a position from "after the backup"
+  await worker.sync();
+  expect(worker.engine.status).toMatchObject({ pending: 0, conflicts: 0, rejected: 0 });
+  const after = await loadAnimals(worker.repo);
+  expect(after.length).toBe(before + 1);
+  expect(after.find((a) => a.animal.tag === 'AFTER-RESTORE')!.record.syncState).toBe('synced');
 });

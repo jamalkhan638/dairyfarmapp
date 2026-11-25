@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { createHash, randomBytes, randomUUID } from 'crypto';
@@ -11,6 +11,32 @@ import { AuditService } from '../audit/audit.service';
 import { SyncFeed } from '../sync/sync-feed';
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+
+/**
+ * Slows down password guessing: after 5 wrong passwords for a username within 15 minutes,
+ * that username is locked for 15 minutes. Kept in memory (one small server).
+ */
+const MAX_FAILURES = 5;
+const WINDOW_MS = 15 * 60_000;
+const failures = new Map<string, { count: number; first: number }>();
+function isLocked(username: string) {
+  const f = failures.get(username);
+  if (!f) return false;
+  if (Date.now() - f.first > WINDOW_MS) {
+    failures.delete(username);
+    return false;
+  }
+  return f.count >= MAX_FAILURES;
+}
+function recordFailure(username: string) {
+  const f = failures.get(username);
+  if (!f || Date.now() - f.first > WINDOW_MS) failures.set(username, { count: 1, first: Date.now() });
+  else f.count++;
+}
+/** For tests. */
+export function resetLoginFailures() {
+  failures.clear();
+}
 
 @Injectable()
 export class AuthService {
@@ -46,9 +72,15 @@ export class AuthService {
   }
 
   async login(username: string, password: string, deviceName?: string): Promise<LoginResponse> {
-    const user = await this.prisma.user.findUnique({ where: { username: username.trim().toLowerCase() } });
+    const name = username.trim().toLowerCase();
+    if (isLocked(name)) throw new HttpException('Too many wrong passwords. Try again in 15 minutes.', HttpStatus.TOO_MANY_REQUESTS);
+    const user = await this.prisma.user.findUnique({ where: { username: name } });
     // Same message whether the username or password is wrong.
-    if (!user || !(await argon2.verify(user.passwordHash, password))) throw new UnauthorizedException('Wrong username or password');
+    if (!user || !(await argon2.verify(user.passwordHash, password))) {
+      recordFailure(name);
+      throw new UnauthorizedException('Wrong username or password');
+    }
+    failures.delete(name);
     if (!user.active) throw new UnauthorizedException('This account is disabled');
     return this.issueTokens(user.id, deviceName);
   }

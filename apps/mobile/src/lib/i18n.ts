@@ -167,6 +167,7 @@ const en = {
   milkValueEst: 'Milk value (est.)', feedCostEst: 'Feed cost (est.)', perCowNote: "Milk value = litres × this month's average sale price. Shared feed is split equally. Both are estimates.",
   month: 'Month', profitShort: 'Profit', thisMonthSoFar: 'This month so far', todaySection: 'Today', quickActions: 'Quick actions', sections: 'Sections',
   capitalThisMonth: 'Capital this month (not in profit)',
+  backups: 'Backups', lastBackup: 'Last successful backup: {{time}}', noBackupYet: 'No backup has been made yet.', backupOld: 'The last backup is more than 36 hours old. Please check the server.', backupFailed: 'The last backup failed: {{time}}', backupNow: 'Back up now', backupRequested: 'Backup requested. It will finish within a minute.', backupNotConnected: 'No backup folder is connected to this server (test server only).', backupHelp: 'The server backs up the database and photos every night at about 2:30 (keeps 30 days and 12 months). Keep a copy off the server from time to time too.',
  noOpeningSet: 'Set your opening balance so the cash book is right.',
  perAnimal: 'Per animal', fullAccessDefault: 'New users get full access. Untick anything they should not do.',
 };
@@ -325,6 +326,7 @@ const ur: Dict = {
   milkValueEst: 'دودھ کی قیمت (اندازاً)', feedCostEst: 'چارے کا خرچ (اندازاً)', perCowNote: 'دودھ کی قیمت = لیٹر × اس مہینے کی اوسط قیمت فروخت۔ مشترکہ چارہ برابر تقسیم۔ دونوں اندازے ہیں۔',
   month: 'مہینہ', profitShort: 'منافع', thisMonthSoFar: 'اس مہینے اب تک', todaySection: 'آج', quickActions: 'فوری کام', sections: 'حصے',
   capitalThisMonth: 'اس مہینے سرمایہ (منافع میں شامل نہیں)',
+  backups: 'بیک اپ', lastBackup: 'آخری کامیاب بیک اپ: {{time}}', noBackupYet: 'ابھی کوئی بیک اپ نہیں ہوا۔', backupOld: 'آخری بیک اپ 36 گھنٹے سے پرانا ہے۔ سرور چیک کریں۔', backupFailed: 'آخری بیک اپ ناکام ہوا: {{time}}', backupNow: 'ابھی بیک اپ کریں', backupRequested: 'بیک اپ کی درخواست ہو گئی۔ ایک منٹ میں مکمل ہو جائے گا۔', backupNotConnected: 'اس سرور پر بیک اپ فولڈر منسلک نہیں (صرف ٹیسٹ سرور)۔', backupHelp: 'سرور ہر رات تقریباً 2:30 بجے ڈیٹا بیس اور تصاویر کا بیک اپ لیتا ہے (30 دن اور 12 مہینے رکھے جاتے ہیں)۔ وقتاً فوقتاً ایک کاپی سرور سے باہر بھی رکھیں۔',
  noOpeningSet: 'کیش بک درست رکھنے کے لیے ابتدائی رقم درج کریں۔',
  perAnimal: 'فی جانور', fullAccessDefault: 'نئے صارف کو مکمل اجازت ملتی ہے۔ جو کام نہ کرنے دینا ہو اس کا نشان ہٹا دیں۔',
 };

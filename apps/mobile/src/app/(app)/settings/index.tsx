@@ -8,6 +8,7 @@ import { useSession } from '../../../lib/session';
 import { useSync } from '../../../lib/sync';
 import { Button, Card, Field, InfoLine, Notice, Screen, Section } from '../../../components/ui';
 import { LanguagePicker } from '../../../components/LanguagePicker';
+import { BackupCard } from '../../../components/BackupCard';
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -47,6 +48,7 @@ export default function Settings() {
       </Card>
       <LanguagePicker />
       {isOwner ? <Button title={t('users')} onPress={() => router.push('/settings/users')} /> : null}
+      {isOwner ? <BackupCard /> : null}
       <Button title={t('syncDetails')} variant="secondary" onPress={() => router.push('/sync')} />
       {can('finance', 'edit') ? <Button title={t('farmSettings')} variant="secondary" onPress={() => router.push('/money/opening')} /> : null}
       <Section>{t('changePassword')}</Section>
