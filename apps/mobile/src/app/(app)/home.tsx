@@ -64,7 +64,7 @@ export default function Home() {
   return (
     <Screen>
       {d.settings?.farmName ? (
-        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.primaryDark, textAlign: 'left' }}>🐄 {d.settings.farmName}</Text>
+        <Text style={{ fontSize: 22, fontWeight: '700', color: colors.primaryDark, textAlign: 'left' }}>🐄 {d.settings.farmName}</Text>
       ) : null}
       <Title>{t('hello', { name: me?.name ?? '' })}</Title>
 
