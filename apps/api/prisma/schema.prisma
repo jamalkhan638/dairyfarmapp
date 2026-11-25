@@ -310,3 +310,109 @@ model MilkUsage {
 
   @@index([date])
 }
+
+// ---------- Sales ----------
+
+enum SaleType {
+  CASH
+  CREDIT
+}
+
+enum PaymentMethod {
+  CASH
+  BANK
+  MOBILE
+}
+
+model Customer {
+  id              String   @id @db.Uuid
+  name            String
+  phone           String?
+  address         String?
+  notes           String?
+  defaultSaleType SaleType @default(CREDIT)
+  active          Boolean  @default(true)
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+}
+
+/// Price per litre for one customer, from effectiveFrom until the next rate.
+model CustomerRate {
+  id                String  @id @db.Uuid
+  customerId        String  @db.Uuid
+  ratePaisaPerLitre Int
+  effectiveFrom     String
+  note              String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([customerId, effectiveFrom])
+}
+
+/// Milk given to a customer. amountPaisa is always calculated by the server.
+model MilkDelivery {
+  id                String      @id @db.Uuid
+  customerId        String      @db.Uuid
+  date              String
+  session           MilkSession
+  quantityMl        Int
+  ratePaisaPerLitre Int
+  amountPaisa       Int
+  saleType          SaleType
+  /// The payment created with a cash sale.
+  cashPaymentId     String?     @db.Uuid
+  note              String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([date])
+  @@index([customerId, date])
+}
+
+/// Money received from a customer. Separate from deliveries; partial payments are normal.
+model CustomerPayment {
+  id          String        @id @db.Uuid
+  customerId  String        @db.Uuid
+  date        String
+  amountPaisa Int
+  method      PaymentMethod
+  /// Set when this payment was created automatically for a cash sale.
+  deliveryId  String?       @db.Uuid
+  note        String?
+
+  version         Int       @default(1)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  clientCreatedAt DateTime?
+  updatedById     String    @db.Uuid
+  updatedAt       DateTime  @updatedAt
+  clientUpdatedAt DateTime?
+  deletedAt       DateTime?
+  deletedById     String?   @db.Uuid
+
+  @@index([customerId, date])
+}

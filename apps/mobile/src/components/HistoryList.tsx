@@ -7,11 +7,11 @@ import { local } from '../lib/db';
 import { formatDateTime } from '../lib/format';
 import { Body, Card, Muted, Notice } from './ui';
 import { fieldLabel, formatValue } from '../domain/entity-labels';
-import { useAnimalTags } from '../lib/use-animal-tags';
+import { useLookups } from '../lib/use-animal-tags';
 
 /** Who changed what and when. Loaded from the server; the last copy is kept for offline viewing. */
 export function HistoryList({ entity, id }: { entity: string; id: string }) {
-  const tagOf = useAnimalTags();
+  const lookups = useLookups();
   const { t } = useTranslation();
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
   const [offline, setOffline] = useState(false);
@@ -45,7 +45,7 @@ export function HistoryList({ entity, id }: { entity: string; id: string }) {
           {e.action !== 'CREATE'
             ? Object.entries(e.changes).map(([f, c]) => (
                 <Body key={f}>
-                  {fieldLabel(entity, f)}: {formatValue(entity, f, c.from, tagOf)} → {formatValue(entity, f, c.to, tagOf)}
+                  {fieldLabel(entity, f)}: {formatValue(entity, f, c.from, lookups)} → {formatValue(entity, f, c.to, lookups)}
                 </Body>
               ))
             : null}

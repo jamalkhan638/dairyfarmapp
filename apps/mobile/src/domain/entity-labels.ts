@@ -3,11 +3,18 @@ import { formatDate, formatPKR } from '../lib/format';
 
 const t = (k: string) => i18n.t(k as any);
 
+/** Look up names for ids (cow tags, customer names) when showing records. */
+export interface Lookups {
+  tagOf?: (id: string) => string | undefined;
+  customerOf?: (id: string) => string | undefined;
+}
+
+const ENTITY_KEYS: Record<string, string> = {
+  Animal: 'animal', AnimalStatusChange: 'status', Attachment: 'photo', SyncConflict: 'conflict', MilkRecord: 'milk', MilkUsage: 'usage',
+  Customer: 'customer', CustomerRate: 'rateShort', MilkDelivery: 'delivery', CustomerPayment: 'payment',
+};
 export function entityLabel(entity: string) {
-  const map: Record<string, string> = {
-    Animal: 'animal', AnimalStatusChange: 'status', Attachment: 'photo', SyncConflict: 'conflict', MilkRecord: 'milk', MilkUsage: 'usage',
-  };
-  return map[entity] ? t(map[entity]) : entity;
+  return ENTITY_KEYS[entity] ? t(ENTITY_KEYS[entity]) : entity;
 }
 
 const FIELD_KEYS: Record<string, string> = {
@@ -16,34 +23,46 @@ const FIELD_KEYS: Record<string, string> = {
   status: 'status', statusDate: 'statusDate', effectiveDate: 'effectiveDate', reason: 'reason', animalId: 'animal', deletedAt: 'deleted',
   date: 'date', session: 'session', quantityMl: 'quantity', note: 'notes', type: 'type',
   role: 'role', active: 'activeAccount', permissions: 'permissions', password: 'password',
+  customerId: 'customer', phone: 'phone', address: 'address', defaultSaleType: 'defaultSaleType', saleType: 'saleType',
+  ratePaisaPerLitre: 'rateShort', effectiveFrom: 'rateFrom', amountPaisa: 'amountShort', method: 'method', cashPaymentId: 'payment', deliveryId: 'delivery',
 };
-
-/** Field label for any record type. */
 export function fieldLabel(_entity: string, field: string) {
   return FIELD_KEYS[field] ? t(FIELD_KEYS[field]) : field;
 }
 
-/** Show a stored value the way people read it (litres, rupees, dates, names of options). */
-export function formatValue(_entity: string, field: string, v: unknown, animalTag?: (id: string) => string | undefined): string {
+/** Show a stored value the way people read it (litres, rupees, dates, option names, names for ids). */
+export function formatValue(entity: string, field: string, v: unknown, l: Lookups = {}): string {
   if (v === null || v === undefined || v === '') return t('emptyValue');
   if (typeof v === 'boolean') return v ? t('yes') : t('no');
   if (field === 'quantityMl' && typeof v === 'number') return `${(v / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 })} ${t('L')}`;
-  if (field === 'purchasePricePaisa' && typeof v === 'number') return formatPKR(v);
-  if (['date', 'birthDate', 'purchaseDate', 'effectiveDate', 'statusDate'].includes(field) && typeof v === 'string') return formatDate(v);
+  if ((field === 'purchasePricePaisa' || field === 'amountPaisa') && typeof v === 'number') return formatPKR(v);
+  if (field === 'ratePaisaPerLitre' && typeof v === 'number') return `${formatPKR(v)}${t('perLitre')}`;
+  if (['date', 'birthDate', 'purchaseDate', 'effectiveDate', 'statusDate', 'effectiveFrom'].includes(field) && typeof v === 'string') return formatDate(v);
   if (field === 'session') return v === 'MORNING' ? t('morning') : t('evening');
-  if (field === 'status') return t(`s_${v}`);
+  if (field === 'status' && entity !== 'SyncConflict') return t(`s_${v}`);
   if (field === 'type') return t(`u_${v}`);
+  if (field === 'saleType' || field === 'defaultSaleType') return t(`st_${v}`);
+  if (field === 'method') return t(`pm_${v}`);
   if (field === 'sex') return v === 'FEMALE' ? t('female') : t('male');
-  if ((field === 'animalId' || field === 'motherId') && typeof v === 'string') return animalTag?.(v) ? `#${animalTag(v)}` : '—';
+  if ((field === 'animalId' || field === 'motherId') && typeof v === 'string') return l.tagOf?.(v) ? `#${l.tagOf(v)}` : '—';
+  if (field === 'customerId' && typeof v === 'string') return l.customerOf?.(v) ?? '—';
+  if (field === 'cashPaymentId' || field === 'deliveryId') return '✓';
   if (typeof v === 'object') return JSON.stringify(v);
   return String(v);
 }
 
-/** A short name for a record, e.g. "#101 Rani". */
-export function recordTitle(entity: string, data: Record<string, any> | null | undefined, animalTag?: (id: string) => string | undefined) {
+/** A short name for a record, e.g. "#101 Rani" or "Hotel Shabbir · 24 Nov · Morning". */
+export function recordTitle(entity: string, data: Record<string, any> | null | undefined, l: Lookups = {}) {
   if (!data) return '';
-  if (entity === 'Animal') return `#${data.tag ?? ''}${data.name ? ` ${data.name}` : ''}`;
-  if (entity === 'MilkRecord') return `#${animalTag?.(data.animalId) ?? ''} · ${formatDate(data.date)} · ${data.session === 'MORNING' ? t('morning') : t('evening')}`;
-  if (entity === 'MilkUsage') return `${t(`u_${data.type}`)} · ${formatDate(data.date)}`;
-  return '';
+  const session = (s: string) => (s === 'MORNING' ? t('morning') : t('evening'));
+  switch (entity) {
+    case 'Animal': return `#${data.tag ?? ''}${data.name ? ` ${data.name}` : ''}`;
+    case 'MilkRecord': return `#${l.tagOf?.(data.animalId) ?? ''} · ${formatDate(data.date)} · ${session(data.session)}`;
+    case 'MilkUsage': return `${t(`u_${data.type}`)} · ${formatDate(data.date)}`;
+    case 'Customer': return data.name ?? '';
+    case 'CustomerRate': return `${l.customerOf?.(data.customerId) ?? ''} · ${formatPKR(data.ratePaisaPerLitre)}${t('perLitre')}`;
+    case 'MilkDelivery': return `${l.customerOf?.(data.customerId) ?? ''} · ${formatDate(data.date)} · ${session(data.session)}`;
+    case 'CustomerPayment': return `${l.customerOf?.(data.customerId) ?? ''} · ${formatPKR(data.amountPaisa)}`;
+    default: return '';
+  }
 }

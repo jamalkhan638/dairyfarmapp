@@ -32,9 +32,19 @@ packages/shared Rules shared by app and server: validation, permissions, sync pr
 - Each cow has a Milk tab (last 30 days, who entered each value)
 - Workers with only milk access can still see the cow list (not edit it)
 
+**Phase 3 – Customers & sales: done**
+- Customers with phone, address, usual payment (cash/credit), active/inactive
+- Customer-specific rates with history: each delivery keeps the rate it was sold at
+- Delivery round: one milking, all customers on one screen, litres + cash/credit per customer
+- The server calculates every amount (litres × rate); a cash sale also records its payment automatically
+- One delivery per customer, date and milking (a second one from another phone becomes a duplicate to decide on)
+- Payments are separate records: any amount, partial payments, advances; cash/bank/JazzCash-Easypaisa
+- Balances per customer and in total; monthly statement with opening balance, milk given, paid, closing balance
+- The milk screens now show "Sold" from deliveries (only to users who may see sales)
+
 Server setup on Contabo: see [deploy/DEPLOY.md](deploy/DEPLOY.md).
 
-Next phases: Customers & sales → Feed & suppliers → Expenses & capital → Health & breeding → Reports → Release & backups.
+Next phases: Feed & suppliers → Expenses & capital → Health & breeding → Reports → Release & backups.
 
 ## Run it (development)
 
@@ -72,7 +82,7 @@ Automated (needs a `dairy_test` database: `createdb dairy_test`):
 ```bash
 npm test
 ```
-39 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
+51 tests run against a real database. They include two simulated phones running the app's real sync engine offline.
 
 By hand on a phone:
 1. **Owner + worker.** As owner: Settings → Users → Add user. Give the worker Animals: See + Add + Edit, but not Delete. Log in as the worker on a second phone.
@@ -94,6 +104,18 @@ By hand on a phone:
 5. **Add milk use** (e.g. 3 L fed to calves). The day's "Remaining" goes down.
 6. **Monthly milk**: last month shows "Incomplete" if milkings are missing. This month shows "Month in progress".
 7. Make a worker with only Milk permissions. They can record milk and see the cows, but cannot edit an animal.
+
+## Verify Phase 3 (Sales)
+
+1. **Sales → Add customer**: "Hotel", rate 210, usually Credit. Add "Walk-in", rate 220, usually Cash.
+2. **Delivery round: Morning**: enter 10 L for Hotel and 2 L for Walk-in. The bottom button shows the total litres and rupees. Save.
+3. Sales list: Hotel owes Rs 2,100. Walk-in is "Settled" (cash sale paid automatically).
+4. **Receive payment** from Hotel: Rs 1,000. Hotel now owes Rs 1,100. The statement shows both lines with the running balance.
+5. **Change rate** for Hotel to 230 from tomorrow. Today's delivery still shows Rs 210/L.
+6. Open today's Hotel delivery from the statement and change it to 12 L. The amount becomes Rs 2,520 and the history shows who changed it.
+7. **Milk** screen: "Sold" shows today's 12 L + 2 L, and "Remaining" is updated.
+8. Offline: on two phones, enter Hotel's morning delivery for the same day, then reconnect. One delivery is kept and the other phone gets a decision.
+9. A worker with Sales "See + Add" can record deliveries and payments but cannot change rates or edit saved deliveries.
 
 ## How sync works (short)
 

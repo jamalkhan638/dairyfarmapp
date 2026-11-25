@@ -6,17 +6,8 @@ import { useSession } from '../../../lib/session';
 import { useMilkData } from '../../../lib/use-milk';
 import { litres, summarizeMonth } from '../../../domain/milk';
 import { formatDate, today } from '../../../lib/format';
-import i18n from '../../../lib/i18n';
+import { monthName, shiftMonth as shift } from '../../../lib/months';
 import { Badge, Body, Button, Card, InfoLine, Muted, Notice, Row, Screen, Section } from '../../../components/ui';
-
-const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MONTHS_UR = ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'];
-const monthName = (m: string) => `${(i18n.language === 'en' ? MONTHS_EN : MONTHS_UR)[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`;
-function shift(month: string, by: number) {
-  const [y, m] = month.split('-').map(Number);
-  const d = new Date(Date.UTC(y, m - 1 + by, 1));
-  return d.toISOString().slice(0, 7);
-}
 
 /** Month totals, with how complete the recording is. */
 export default function MilkMonth() {
@@ -28,7 +19,7 @@ export default function MilkMonth() {
   const data = useMilkData();
   if (!can('milk', 'view')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   if (!data) return <Screen>{null}</Screen>;
-  const m = summarizeMonth(month, data.animals, data.records.map((r) => r.data), data.usages.map((u) => u.data));
+  const m = summarizeMonth(month, data.animals, data.records.map((r) => r.data), data.usages.map((u) => u.data), data.soldByDate ?? {});
   const L = (ml: number) => `${litres(ml)} ${t('L')}`;
   const isFuture = month > today().slice(0, 7);
 
@@ -46,7 +37,7 @@ export default function MilkMonth() {
         </Row>
         <InfoLine label={t('produced')} value={L(m.producedMl)} />
         {MILK_USAGE_TYPES.map((u) => <InfoLine key={u} label={t(`u_${u}`)} value={L(m.usedMl[u])} />)}
-        <InfoLine label={t('sold')} value="—" />
+        <InfoLine label={t('sold')} value={data.soldByDate ? L(m.soldMl) : '—'} />
         <Muted>{t('recordedOf', { recorded: m.recorded, expected: m.expected })}</Muted>
         {m.recorded > 0 ? <Muted>{t('averagePerMilking')}: {L(Math.round(m.producedMl / m.recorded))}</Muted> : null}
         <Muted>{t('missingNote')}</Muted>

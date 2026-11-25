@@ -17,3 +17,11 @@ export function farmToday(now: Date = new Date()): string {
   const pk = new Date(now.getTime() + 5 * 60 * 60 * 1000);
   return pk.toISOString().slice(0, 10);
 }
+
+/**
+ * Amount for a milk sale: litres × rate, rounded to the nearest paisa.
+ * The server always recalculates this; the phone uses the same formula for display.
+ */
+export function saleAmountPaisa(quantityMl: number, ratePaisaPerLitre: number): number {
+  return Math.round((quantityMl * ratePaisaPerLitre) / 1000);
+}

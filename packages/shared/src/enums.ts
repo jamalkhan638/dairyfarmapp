@@ -21,3 +21,9 @@ export type MilkUsageType = (typeof MILK_USAGE_TYPES)[number];
 
 /** Most a cow can give in one milking (ml). Higher values are typing mistakes. */
 export const MAX_MILK_PER_SESSION_ML = 60_000;
+
+export const SALE_TYPES = ['CASH', 'CREDIT'] as const;
+export type SaleType = (typeof SALE_TYPES)[number];
+
+export const PAYMENT_METHODS = ['CASH', 'BANK', 'MOBILE'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];

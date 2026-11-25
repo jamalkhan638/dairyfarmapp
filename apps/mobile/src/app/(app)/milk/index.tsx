@@ -20,7 +20,7 @@ export default function MilkDay() {
 
   if (!can('milk', 'view')) return <Screen><Notice tone="bad" text={t('noPermission')} /></Screen>;
   if (!data) return <Screen>{null}</Screen>;
-  const s = summarizeDay(date, data.animals, data.records.map((r) => r.data), data.usages.map((u) => u.data));
+  const s = summarizeDay(date, data.animals, data.records.map((r) => r.data), data.usages.map((u) => u.data), data.soldByDate?.[date] ?? 0);
   const L = (ml: number) => `${litres(ml)} ${t('L')}`;
   const dayUsages = data.usages.filter((u) => u.data.date === date);
   const tag = (id: string | null) => (id ? data.animals.find((a) => a.animal.id === id)?.animal.tag : null);
@@ -63,11 +63,11 @@ export default function MilkDay() {
       <Card>
         <InfoLine label={t('produced')} value={L(s.producedMl)} />
         {MILK_USAGE_TYPES.map((u) => <InfoLine key={u} label={t(`u_${u}`)} value={L(s.usedMl[u])} />)}
-        <InfoLine label={t('sold')} value="—" />
-        <InfoLine label={t('remaining')} value={L(s.remainingMl)} />
+        <InfoLine label={t('sold')} value={data.soldByDate ? L(s.soldMl) : '—'} />
+        <InfoLine label={t('remaining')} value={data.soldByDate ? L(s.remainingMl) : '—'} />
         <Muted>{t('soldComing')}</Muted>
       </Card>
-      {s.remainingMl < 0 ? <Notice tone="warn" text={t('remainingNegative')} /> : null}
+      {data.soldByDate && s.remainingMl < 0 ? <Notice tone="warn" text={t('remainingNegative')} /> : null}
       {dayUsages.map((u) => (
         <Card key={u.id} onPress={can('milk', 'edit') ? () => router.push({ pathname: '/milk/usage', params: { id: u.id } }) : undefined}>
           <Row style={{ justifyContent: 'space-between' }}>

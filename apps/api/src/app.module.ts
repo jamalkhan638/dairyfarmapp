@@ -8,6 +8,7 @@ import { SyncModule } from './sync/sync.module';
 import { AnimalsModule } from './animals/animals.module';
 import { FilesModule } from './files/files.module';
 import { MilkModule } from './milk/milk.module';
+import { SalesModule } from './sales/sales.module';
 
 @Controller()
 class HealthController {
@@ -20,7 +21,7 @@ class HealthController {
 
 /** One backend application; each farm feature is its own module. */
 @Module({
-  imports: [PrismaModule, AuditModule, AuthModule, UsersModule, SyncModule, AnimalsModule, FilesModule, MilkModule],
+  imports: [PrismaModule, AuditModule, AuthModule, UsersModule, SyncModule, AnimalsModule, FilesModule, MilkModule, SalesModule],
   controllers: [HealthController],
 })
 export class AppModule {}

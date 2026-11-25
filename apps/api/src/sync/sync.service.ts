@@ -186,7 +186,8 @@ export class SyncService {
     if (await delegate.findUnique({ where: { id: m.recordId } })) {
       throw new RejectError('id_exists', 'A record with this id already exists');
     }
-    const values = def.prepareCreate ? await def.prepareCreate(ctx, input, m.recordId) : input;
+    let values = def.prepareCreate ? await def.prepareCreate(ctx, input, m.recordId) : input;
+    if (def.derive) values = { ...values, ...def.derive(values) };
     if (def.validate) await def.validate(ctx, values, null);
     if (def.findDuplicate) {
       const dup = await def.findDuplicate(ctx.tx, values, m.recordId);
@@ -233,6 +234,10 @@ export class SyncService {
     if (clashing.length) return this.conflict(ctx, def, 'EDIT', current);
     if (!Object.keys(changes).length && !opts.restore) return this.applied(m, def, current);
 
+    if (def.derive) {
+      const derived = def.derive({ ...current, ...changes });
+      for (const [k, v] of Object.entries(derived)) if (!sameValue(current[k], v)) changes[k] = v;
+    }
     const merged = { ...current, ...changes };
     if (def.validate) await def.validate(ctx, merged, current);
     const keyChanged = (def.duplicateKeyFields ?? []).some((f) => f in changes) || opts.restore;
@@ -264,6 +269,7 @@ export class SyncService {
     if (!current) throw new RejectError('not_found', 'Record not found');
     this.requirePermission(ctx.user, def, current, def.actions.delete);
     if (current.deletedAt) return this.applied(m, def, current);
+    if (def.beforeDelete) await def.beforeDelete(ctx, current);
 
     if (!opts.force && current.version !== m.baseVersion) {
       // Deleting is only safe if nobody changed what this user saw before deleting.

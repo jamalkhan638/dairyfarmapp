@@ -43,6 +43,10 @@ export interface EntityDef {
   canDelete: boolean;
   /** Turn validated create input into database columns. */
   prepareCreate?(ctx: EntityContext, input: Row, id: string): Promise<Row> | Row;
+  /** Fields the server calculates from other fields (e.g. amount = litres × rate). Never taken from the phone. */
+  derive?(values: Row): Row;
+  /** Throw RejectError to refuse a delete (e.g. the record is managed by another one). */
+  beforeDelete?(ctx: EntityContext, record: Row): Promise<void>;
   /** Throw RejectError if the values are not allowed (e.g. parent missing). */
   validate?(ctx: EntityContext, values: Row, existing: Row | null): Promise<void>;
   /** Another live record with the same business key (e.g. same ear tag), if any. */

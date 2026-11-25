@@ -42,7 +42,7 @@ const en = {
   emptyValue: '(empty)',
   // home
   home: 'Home', hello: 'Assalam-o-Alaikum, {{name}}', herd: 'Herd', animals: 'Animals', settings: 'Settings',
-  comingSoon: 'Coming in the next phases: sales, feed, expenses, health and reports.',
+  comingSoon: 'Coming in the next phases: feed, expenses, health and reports.',
   // animals
   addAnimal: 'Add animal', editAnimal: 'Edit animal', animal: 'Animal', tag: 'Tag number', breed: 'Breed', sex: 'Sex', female: 'Female', male: 'Male',
   birthDate: 'Birth date', birthDateEstimated: 'Birth date is an estimate', age: 'Age', purchaseDate: 'Purchase date', purchasePrice: 'Purchase price (PKR)',
@@ -67,7 +67,7 @@ const en = {
   recordedOf: '{{recorded}} of {{expected}} milkings recorded', missingEntries: 'Not recorded yet',
   missingNote: 'Milkings not recorded are shown as missing, never counted as zero.',
   usage: 'Milk not sold', addUsage: 'Add milk use', u_CALF_FED: 'Fed to calves', u_HOME: 'Used at home', u_DISCARDED: 'Discarded',
-  sold: 'Sold', soldComing: 'Sold milk will come from customer deliveries (next phase).',
+  sold: 'Sold', soldComing: 'Sold milk comes from customer deliveries.',
   remaining: 'Remaining', remainingNegative: 'More milk is used than produced. Please check the entries.',
   monthly: 'Monthly milk', incomplete: 'Incomplete', inProgress: 'Month in progress', complete: 'Complete', dayInProgress: 'Day in progress',
   noMilkingCows: 'No milking cows on this date.', showOtherAnimals: 'Show other female animals',
@@ -77,6 +77,23 @@ const en = {
   last30: 'Last 30 days', quantity: 'Quantity (litres)', whichAnimal: 'Animal (optional)', deleteEntryQ: 'Delete this entry?',
   averagePerMilking: 'Average per recorded milking', notMilkingNow: 'not milking on this date', estimateLabel: 'Estimate',
   prevMonth: '‹ Previous', nextMonth: 'Next ›', entries: 'Entries', noEntries: 'No entries.',
+
+  // sales
+  sales: 'Sales', customers: 'Customers', customer: 'Customer', addCustomer: 'Add customer', editCustomer: 'Edit customer',
+  phone: 'Phone', address: 'Address', rate: 'Rate (Rs per litre)', rateShort: 'Rate', perLitre: '/L', currentRate: 'Current rate', noRate: 'No rate set',
+  setRate: 'Set rate', changeRate: 'Change rate', rateFrom: 'Rate starts from', rateHistory: 'Rate history', rateNote: 'Earlier deliveries keep the rate they were sold at.',
+  saleType: 'Cash / credit', defaultSaleType: 'Usually pays', st_CASH: 'Cash', st_CREDIT: 'Credit (pay later)',
+  method: 'Paid by', pm_CASH: 'Cash', pm_BANK: 'Bank', pm_MOBILE: 'JazzCash / Easypaisa',
+  amount: 'Amount (Rs)', amountShort: 'Amount', delivery: 'Delivery', deliveries: 'Deliveries', deliveryRound: 'Delivery round', editDelivery: 'Edit delivery',
+  payment: 'Payment', payments: 'Payments', receivePayment: 'Receive payment', editPayment: 'Edit payment',
+  balance: 'Balance', owes: 'Owes', advance: 'Paid in advance', settled: 'Settled', totalOwed: 'Customers owe in total',
+  billed: 'Milk given', paid: 'Paid', openingBalance: 'Balance before this month', closingBalance: 'Balance at end', statement: 'Statement',
+  activeCustomer: 'Customer active', inactive: 'Inactive', showInactive: 'Show inactive customers', noCustomers: 'No customers yet. Add your first customer.',
+  cashPaymentLinked: 'This payment belongs to a cash sale. Change or delete the sale instead.', cashSaleNote: 'Cash sale: payment recorded automatically.',
+  deliveryFixedFields: 'Customer, date, milking and cash/credit cannot be changed. Delete and add again if needed.',
+  invalidAmount: 'Enter an amount like 1500', invalidRate: 'Enter a rate like 210', deleteCustomerQ: 'Delete this customer?', inUseUseInactive: 'Customers with sales cannot be deleted. Mark as inactive instead.',
+  chooseCustomer: 'Choose customer', thisMonth: 'This month', monthSummary: 'Month summary', soldTo: 'Sold to customers',
+  nameTaken: 'Another customer already has this name',
 };
 
 type Dict = typeof en;
@@ -116,7 +133,7 @@ const ur: Dict = {
   history: 'تبدیلیوں کی تاریخ', historyOffline: 'تاریخ انٹرنیٹ پر دکھائی جاتی ہے۔', created: 'شامل کیا', updated: 'تبدیل کیا', deleted: 'حذف کیا', conflictResolved: 'ٹکراؤ حل کیا',
   emptyValue: '(خالی)',
   home: 'ہوم', hello: 'السلام علیکم، {{name}}', herd: 'ریوڑ', animals: 'جانور', settings: 'ترتیبات',
-  comingSoon: 'اگلے مراحل میں: فروخت، چارہ، اخراجات، صحت اور رپورٹس۔',
+  comingSoon: 'اگلے مراحل میں: چارہ، اخراجات، صحت اور رپورٹس۔',
   addAnimal: 'جانور شامل کریں', editAnimal: 'جانور کی تفصیل تبدیل کریں', animal: 'جانور', tag: 'ٹیگ نمبر', breed: 'نسل', sex: 'جنس', female: 'مادہ', male: 'نر',
   birthDate: 'تاریخ پیدائش', birthDateEstimated: 'تاریخ پیدائش اندازاً ہے', age: 'عمر', purchaseDate: 'خریداری کی تاریخ', purchasePrice: 'قیمت خرید (روپے)',
   notes: 'نوٹ', photo: 'تصویر', takePhoto: 'تصویر کھینچیں', choosePhoto: 'تصویر منتخب کریں', removePhoto: 'تصویر ہٹائیں',
@@ -138,7 +155,7 @@ const ur: Dict = {
   recordedOf: '{{expected}} میں سے {{recorded}} دودھ درج ہوئے', missingEntries: 'ابھی درج نہیں ہوا',
   missingNote: 'جو دودھ درج نہیں ہوئے وہ غائب دکھائے جاتے ہیں، انہیں کبھی صفر نہیں گنا جاتا۔',
   usage: 'جو دودھ بیچا نہیں گیا', addUsage: 'دودھ کا استعمال درج کریں', u_CALF_FED: 'بچھڑوں کو پلایا', u_HOME: 'گھر میں استعمال', u_DISCARDED: 'ضائع کیا',
-  sold: 'فروخت', soldComing: 'فروخت شدہ دودھ اگلے مرحلے میں گاہکوں کی ترسیل سے آئے گا۔',
+  sold: 'فروخت', soldComing: 'فروخت شدہ دودھ گاہکوں کی ترسیل سے آتا ہے۔',
   remaining: 'باقی', remainingNegative: 'پیداوار سے زیادہ دودھ استعمال درج ہے۔ اندراج چیک کریں۔',
   monthly: 'ماہانہ دودھ', incomplete: 'نامکمل', inProgress: 'مہینہ جاری ہے', complete: 'مکمل', dayInProgress: 'دن جاری ہے',
   noMilkingCows: 'اس تاریخ کو کوئی دودھ دینے والی گائے نہیں۔', showOtherAnimals: 'دیگر مادہ جانور دکھائیں',
@@ -148,6 +165,22 @@ const ur: Dict = {
   last30: 'پچھلے 30 دن', quantity: 'مقدار (لیٹر)', whichAnimal: 'جانور (اختیاری)', deleteEntryQ: 'یہ اندراج حذف کریں؟',
   averagePerMilking: 'فی درج دودھ اوسط', notMilkingNow: 'اس تاریخ کو دودھ نہیں دے رہی', estimateLabel: 'اندازہ',
   prevMonth: '‹ پچھلا', nextMonth: 'اگلا ›', entries: 'اندراج', noEntries: 'کوئی اندراج نہیں۔',
+
+  sales: 'فروخت', customers: 'گاہک', customer: 'گاہک', addCustomer: 'گاہک شامل کریں', editCustomer: 'گاہک کی تفصیل تبدیل کریں',
+  phone: 'فون', address: 'پتہ', rate: 'ریٹ (روپے فی لیٹر)', rateShort: 'ریٹ', perLitre: '/لیٹر', currentRate: 'موجودہ ریٹ', noRate: 'ریٹ مقرر نہیں',
+  setRate: 'ریٹ مقرر کریں', changeRate: 'ریٹ تبدیل کریں', rateFrom: 'ریٹ کب سے', rateHistory: 'ریٹ کی تاریخ', rateNote: 'پہلے کی ترسیل اپنے پرانے ریٹ پر ہی رہتی ہے۔',
+  saleType: 'نقد / ادھار', defaultSaleType: 'عام طور پر ادائیگی', st_CASH: 'نقد', st_CREDIT: 'ادھار (بعد میں ادائیگی)',
+  method: 'ادائیگی کا طریقہ', pm_CASH: 'نقد', pm_BANK: 'بینک', pm_MOBILE: 'جاز کیش / ایزی پیسہ',
+  amount: 'رقم (روپے)', amountShort: 'رقم', delivery: 'ترسیل', deliveries: 'ترسیلات', deliveryRound: 'دودھ کی ترسیل', editDelivery: 'ترسیل تبدیل کریں',
+  payment: 'ادائیگی', payments: 'ادائیگیاں', receivePayment: 'رقم وصول کریں', editPayment: 'ادائیگی تبدیل کریں',
+  balance: 'بقایا', owes: 'بقایا', advance: 'پیشگی ادا', settled: 'حساب برابر', totalOwed: 'گاہکوں کے ذمے کل بقایا',
+  billed: 'دیا گیا دودھ', paid: 'ادا شدہ', openingBalance: 'اس مہینے سے پہلے کا بقایا', closingBalance: 'آخر میں بقایا', statement: 'حساب',
+  activeCustomer: 'گاہک فعال', inactive: 'غیر فعال', showInactive: 'غیر فعال گاہک دکھائیں', noCustomers: 'ابھی کوئی گاہک نہیں۔ پہلا گاہک شامل کریں۔',
+  cashPaymentLinked: 'یہ ادائیگی نقد فروخت کی ہے۔ اس کی بجائے فروخت تبدیل یا حذف کریں۔', cashSaleNote: 'نقد فروخت: ادائیگی خود درج ہو گئی۔',
+  deliveryFixedFields: 'گاہک، تاریخ، وقت اور نقد/ادھار تبدیل نہیں ہو سکتے۔ ضرورت ہو تو حذف کر کے دوبارہ شامل کریں۔',
+  invalidAmount: 'رقم اس طرح لکھیں: 1500', invalidRate: 'ریٹ اس طرح لکھیں: 210', deleteCustomerQ: 'یہ گاہک حذف کریں؟', inUseUseInactive: 'جن گاہکوں کی فروخت ہو چکی ہو وہ حذف نہیں ہو سکتے۔ انہیں غیر فعال کریں۔',
+  chooseCustomer: 'گاہک منتخب کریں', thisMonth: 'یہ مہینہ', monthSummary: 'مہینے کا خلاصہ', soldTo: 'گاہکوں کو فروخت',
+  nameTaken: 'اس نام کا گاہک پہلے سے موجود ہے',
 };
 
 export type TKey = keyof Dict;

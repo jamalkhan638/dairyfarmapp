@@ -8,7 +8,8 @@ import { useLocalQuery } from '../../lib/hooks';
 import { local } from '../../lib/db';
 import { loadAnimals } from '../../domain/animals';
 import { litres, loadMilk, summarizeDay } from '../../domain/milk';
-import { today } from '../../lib/format';
+import { formatPKR, today } from '../../lib/format';
+import { balances, loadSales } from '../../domain/sales';
 import { Body, Button, Card, Muted, Row, Screen, Section, Title } from '../../components/ui';
 import { colors } from '../../lib/theme';
 
@@ -16,7 +17,9 @@ export default function Home() {
   const { t } = useTranslation();
   const router = useRouter();
   const { me, can } = useSession();
-  const { data } = useLocalQuery(async () => ({ animals: await loadAnimals(local().repo), milk: await loadMilk(local().repo) }));
+  const { data } = useLocalQuery(async () => ({ animals: await loadAnimals(local().repo), milk: await loadMilk(local().repo), sales: await loadSales(local().repo) }));
+  const owed = data ? [...balances(data.sales.deliveries.map((d) => d.data), data.sales.payments.map((p) => p.data)).values()].reduce((s, b) => s + Math.max(0, b.balancePaisa), 0) : 0;
+  const soldToday = data ? data.sales.deliveries.filter((d) => d.data.date === today()).reduce((s, d) => s + d.data.quantityMl, 0) : 0;
   const animals = data?.animals;
   const day = data ? summarizeDay(today(), data.animals, data.milk.records.map((r) => r.data), data.milk.usages.map((u) => u.data)) : null;
   const counts = Object.fromEntries(ANIMAL_STATUSES.map((st) => [st, (animals ?? []).filter((a) => a.status === st).length]));
@@ -52,6 +55,15 @@ export default function Home() {
         </Row>
       ) : null}
       {can('milk', 'view') ? <Button title={t('milk')} variant="secondary" onPress={() => router.push('/milk')} /> : null}
+      {can('sales', 'view') && data ? (
+        <Card onPress={() => router.push('/sales')}>
+          <Section>{t('sales')}</Section>
+          <Muted>{t('soldTo')}: {litres(soldToday)} {t('L')}</Muted>
+          <Body style={{ fontWeight: '700' }}>{t('totalOwed')}: {formatPKR(owed)}</Body>
+        </Card>
+      ) : null}
+      {can('sales', 'add') ? <Button title={t('deliveryRound')} onPress={() => router.push({ pathname: '/sales/round', params: { date: today(), session: 'MORNING' } })} /> : null}
+      {can('sales', 'view') ? <Button title={t('customers')} variant="secondary" onPress={() => router.push('/sales')} /> : null}
       {can('animals', 'view') ? <Button title={t('animals')} onPress={() => router.push('/animals')} /> : null}
       {can('animals', 'add') ? <Button title={t('addAnimal')} variant="secondary" onPress={() => router.push('/animals/new')} /> : null}
       <Button title={t('settings')} variant="secondary" onPress={() => router.push('/settings')} />
